@@ -108,7 +108,7 @@
     }
 
     function redirectDemoExpired() {
-        window.location.replace('index.html?demo=expired');
+        window.location.replace('index.html');
     }
 
     async function init() {

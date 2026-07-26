@@ -131,7 +131,7 @@
         }, true);
 
         var ALLOW = [
-            'owner-config.js', 'shield.js', 'app.js', 'landing.js', 'ai-engine.js',
+            'owner-config.js', 'shield.js', 'app.js', 'ai-engine.js',
             'firebase-init.js', 'demo-timer.js', 'tv.js', 'tradingview',
             'gstatic.com/firebasejs', 'googleapis.com', 'gstatic.com'
         ];

@@ -5,494 +5,424 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <meta name="theme-color" content="#0B0B0F">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
-    <title>FuturesTerminal — Терминал с AI-прогнозом для трейдинга</title>
+    <title>Терминал — FuturesTerminal</title>
     <link rel="icon" href="favicon.svg?v=20260726-ft1" type="image/svg+xml">
     <link rel="apple-touch-icon" href="favicon.svg?v=20260726-ft1">
+    <link rel="preconnect" href="https://fapi.binance.com" crossorigin>
+    <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="stylesheet" href="app.css?v=20260726-ft1">
-    <link rel="stylesheet" href="landing.css?v=20260726-ft1">
+    <!-- Optional webfonts — system fonts already work on old phones -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    </noscript>
     <script>
-    // Anti-FOUC: определяем язык до рендера, скрываем body если не 'ru'
-    (function(){
-        var s;try{s=localStorage.getItem('ft_lang')}catch(e){}
-        var u;try{u=new URL(location.href).searchParams.get('lang')}catch(e){}
-        var lang=u||s||'ru';
-        if(lang!=='ru')document.documentElement.style.opacity='0';
-        try{document.documentElement.lang=lang}catch(e){}
-        // Avoid auth UI flicker: hide login/account until Firebase resolves session
-        try{document.documentElement.classList.add('auth-pending')}catch(e){}
-        // Avoid paid-state flicker: hide demo/buy until Firestore resolves purchased
-        try{document.documentElement.classList.add('access-pending')}catch(e){}
-        // Hide whole page until auth+access resolved (no blinking)
-        try{document.documentElement.classList.add('boot-pending')}catch(e){}
+    (function () {
+        try { document.documentElement.classList.add('app-boot-pending'); } catch (e) {}
+        setTimeout(function () {
+            try { document.documentElement.classList.remove('app-boot-pending'); } catch (e) {}
+        }, 1200);
     })();
     </script>
 </head>
 
-<body class="landing-page">
+<body class="capacitor-app">
 
-    <header class="landing-header">
-        <a href="index.html" class="landing-logo">FuturesTerminal</a>
-        <nav class="landing-nav">
-            <a href="#pricing" class="landing-nav-link" data-i18n="nav.buy" style="display:none">Купить</a>
-            <a href="app.html?demo=1" class="landing-nav-link" data-i18n="nav.demo">Демо</a>
-            <a href="app.html" class="landing-nav-link" data-i18n="nav.terminal">Терминал</a>
-            <div class="landing-lang-wrap" id="landing-lang-wrap">
-                <button type="button" class="landing-lang-btn" id="btn-lang" aria-label="Язык" title="Язык" data-i18n-aria="lang.aria" data-i18n-title="lang.title">
-                    <svg class="landing-lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                </button>
-                <div class="landing-lang-dropdown" id="landing-lang-dropdown">
-                    <div class="landing-lang-title" data-i18n="lang.menuTitle">Язык</div>
-                    <button type="button" class="landing-lang-option" data-lang="ru">Русский</button>
-                    <button type="button" class="landing-lang-option" data-lang="en">English</button>
-                </div>
-            </div>
-            <div class="landing-auth-wrap">
-                <button type="button" class="landing-btn landing-btn-ghost" id="btn-login" data-i18n="auth.login">Войти</button>
-                <div class="landing-account-wrap" id="landing-account-wrap" style="display:none">
-                    <button type="button" class="landing-btn landing-btn-ghost landing-account-btn" id="btn-account" aria-label="Аккаунт" data-i18n-aria="account.label">
-                        <svg class="landing-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <span id="account-label" data-i18n="account.label">Аккаунт</span>
-                    </button>
-                    <div class="landing-account-dropdown" id="landing-account-dropdown">
-                        <a href="app.html" class="landing-account-item"><svg class="landing-account-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span data-i18n="account.openTerminal">Открыть Терминал</span></a>
-                        <button type="button" class="landing-account-item landing-account-logout" id="btn-logout"><svg class="landing-account-item-icon landing-account-icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span data-i18n="account.logout">Выйти</span></button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <main>
-        <!-- Hero -->
-        <section class="landing-hero">
-            <div class="hero-bg">
-                <div class="hero-glow"></div>
-                <div class="hero-grid"></div>
-            </div>
-            <p class="section-label" data-i18n="hero.label">Торговый терминал</p>
-            <h1 class="landing-title hero-slogan">
-                <span data-i18n="hero.title1">Прогнозируйте рынок с ИИ</span><br>
-                <span class="text-primary" data-i18n="hero.title2">точностью</span>
-            </h1>
-            <p class="landing-subtitle" data-i18n="hero.subtitle">
-                Превратите терминал в мощный аналитический инструмент. Автоматическое определение трендов, анализ RSI, скользящих средних и моментума в реальном времени.
-            </p>
-            <div class="landing-cta">
-                <a href="app.html?demo=1" class="landing-btn landing-btn-demo">
-                    <span class="btn-icon">⚡</span>
-                    <span data-i18n="hero.demoBtn">Демо 5 минут</span>
-                </a>
-                <button type="button" class="landing-btn landing-btn-primary" id="btn-open-terminal" data-i18n="hero.enterTerminal">
-                    Войти в Терминал
-                </button>
-            </div>
-            <div class="hero-trust">
-                <span class="hero-trust-item" data-i18n="hero.trustBinance">Данные Binance</span>
-                <span class="hero-trust-dot"></span>
-                <span class="hero-trust-item" data-i18n="hero.trustDemo">Демо без карты</span>
-                <span class="hero-trust-dot"></span>
-                <span class="hero-trust-item" data-i18n="hero.trustCryptoForex">Только крипто</span>
-            </div>
-        </section>
-
-        <!-- Terminal UI preview -->
-        <section class="landing-section landing-preview" id="preview">
-            <p class="section-label" data-i18n="preview.label">Интерфейс</p>
-            <h2 class="section-title" data-i18n="preview.title">Будущее трейдинга</h2>
-            <div class="terminal-preview-wrap">
-                <div class="terminal-preview-browser">
-                    <div class="terminal-preview-url">FuturesTerminal / app</div>
-                    <div class="terminal-preview-frame">
-                        <div class="terminal-preview-topbar">
-                            <span class="tp-logo">FuturesTerminal</span>
-                            <span class="tp-tabs"><span class="tp-tab active">Crypto</span></span>
-                            <span class="tp-search" data-i18n="preview.search">Поиск...</span>
-                            <span class="tp-demo" data-i18n="preview.emulator">⚡ Эмулятор</span>
-                            <span class="tp-balance">$10,000.00</span>
-                        </div>
-                        <div class="terminal-preview-layout">
-                            <div class="tp-sidebar">
-                                <div class="tp-sidebar-head"><span data-i18n="preview.volume">Объём</span><span data-i18n="preview.24h">24h%</span><span data-i18n="preview.name">Имя</span></div>
-                                <div class="tp-row active"><span class="tp-star">★</span><span>BTC</span><span>97,234</span><span class="tp-up">+2.1%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>ETH</span><span>3,421</span><span class="tp-down">−1.4%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>SOL</span><span>218</span><span class="tp-up">+5.2%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>BNB</span><span>612</span><span class="tp-down">−0.8%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>XRP</span><span>2.41</span><span class="tp-up">+1.1%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>DOGE</span><span>0.38</span><span class="tp-down">−0.5%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>ADA</span><span>0.52</span><span class="tp-up">+3.2%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>AVAX</span><span>35.2</span><span class="tp-down">−1.1%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>LINK</span><span>14.8</span><span class="tp-up">+4.0%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>DOT</span><span>7.12</span><span class="tp-down">−0.3%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>MATIC</span><span>0.89</span><span class="tp-up">+2.8%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>LTC</span><span>98.5</span><span class="tp-up">+1.5%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>TRX</span><span>0.14</span><span class="tp-up">+0.7%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>TON</span><span>2.31</span><span class="tp-down">−0.9%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>SHIB</span><span>0.00002</span><span class="tp-up">+3.6%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>UNI</span><span>7.84</span><span class="tp-up">+1.2%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>APT</span><span>9.12</span><span class="tp-down">−1.0%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>ATOM</span><span>11.6</span><span class="tp-up">+0.8%</span></div>
-                            </div>
-                            <div class="tp-chart">
-                                <span class="tp-chart-label">BTCUSDT · 15m</span>
-                                <div class="tp-chart-svg-wrap">
-                                    <svg class="tp-chart-svg" viewBox="0 0 320 140" preserveAspectRatio="none">
-                                        <defs>
-                                            <linearGradient id="tp-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--primary)" stop-opacity="0.18"/><stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/></linearGradient>
-                                            <!-- Comet glow filter -->
-                                            <filter id="tp-comet-glow" x="-20%" y="-80%" width="140%" height="260%">
-                                                <feGaussianBlur stdDeviation="4" result="blur"/>
-                                                <feMerge>
-                                                    <feMergeNode in="blur"/>
-                                                    <feMergeNode in="SourceGraphic"/>
-                                                </feMerge>
-                                            </filter>
-                                            <!-- Moving mask: gradient rect slides L→R, black=hidden tail, white=visible head -->
-                                            <linearGradient id="tp-comet-mask-grad" gradientUnits="objectBoundingBox" x1="0" y1="0" x2="1" y2="0">
-                                                <stop offset="0%"   stop-color="black"/>
-                                                <stop offset="45%"  stop-color="#444"/>
-                                                <stop offset="75%"  stop-color="#bbb"/>
-                                                <stop offset="100%" stop-color="white"/>
-                                            </linearGradient>
-                                            <mask id="tp-comet-mask" maskUnits="userSpaceOnUse">
-                                                <rect class="tp-comet-reveal" x="-130" y="-10" width="130" height="160" fill="url(#tp-comet-mask-grad)"/>
-                                            </mask>
-                                        </defs>
-                                        <rect width="320" height="140" fill="rgba(0,0,0,0.2)"/>
-                                        <line x1="0" y1="20" x2="320" y2="20" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-                                        <line x1="0" y1="70" x2="320" y2="70" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-                                        <line x1="0" y1="120" x2="320" y2="120" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-                                        <path fill="url(#tp-chart-fill)" d="M0,90 L40,85 L80,70 L120,75 L160,55 L200,65 L240,45 L280,50 L320,35 L320,140 L0,140 Z"/>
-                                        <path class="tp-chart-line" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M0,90 L40,85 L80,70 L120,75 L160,55 L200,65 L240,45 L280,50 L320,35"/>
-                                        <!-- Comet: full path, visibility controlled by moving mask -->
-                                        <g mask="url(#tp-comet-mask)">
-                                            <path class="tp-chart-comet" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#tp-comet-glow)" d="M0,90 L40,85 L80,70 L120,75 L160,55 L200,65 L240,45 L280,50 L320,35"/>
-                                        </g>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="tp-ai">
-                                <div class="tp-ai-head-wrap"><span class="tp-ai-head">AI Analysis</span><span class="tp-ai-rocket" aria-hidden="true">🚀</span></div>
-                                <div class="tp-ai-symbol">BTC / USDT</div>
-                                <div class="tp-ai-direction tp-ai-up"><span class="tp-arrow">↑</span> <span data-i18n="preview.directionUp">Рост</span></div>
-                                <div class="tp-ai-confidence"><span data-i18n="preview.confidenceLabel">Уверенность</span>: <strong>72%</strong> · RSI: <strong>58</strong></div>
-                                <div class="tp-ai-hz">
-                                    <span class="hz-up">15м ↑</span><span class="hz-up">1ч ↑</span><span class="hz-side">4ч →</span>
-                                    <span class="hz-up">1д ↑</span><span class="hz-down">1нед ↓</span>
-                                </div>
-                                <div class="tp-ai-longterm">
-                                    <div class="tp-longterm-title" data-i18n="preview.longtermTitle">Долгосрочный прогноз</div>
-                                    <div class="tp-longterm-grid">
-                                        <div class="tp-longterm-item tp-lt-up">
-                                            <span class="tp-lt-label">4ч</span>
-                                            <span class="tp-lt-arrow">↑</span>
-                                            <span class="tp-lt-pct">90%</span>
-                                            <span class="tp-lt-rsi">RSI 62</span>
-                                        </div>
-                                        <div class="tp-longterm-item tp-lt-up">
-                                            <span class="tp-lt-label">1д</span>
-                                            <span class="tp-lt-arrow">↑</span>
-                                            <span class="tp-lt-pct">61%</span>
-                                            <span class="tp-lt-rsi">RSI 59</span>
-                                        </div>
-                                        <div class="tp-longterm-item tp-lt-down">
-                                            <span class="tp-lt-label">1нед</span>
-                                            <span class="tp-lt-arrow">↓</span>
-                                            <span class="tp-lt-pct">61%</span>
-                                            <span class="tp-lt-rsi">RSI 37</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tp-ai-indicators">
-                                    <span class="ind up">EMA</span><span class="ind up">P/EMA</span><span class="ind side" data-i18n="preview.candles">Свечи</span>
-                                </div>
-                                <div class="tp-ai-text" data-i18n="preview.forecastText">Краткосрочный прогноз: продолжение роста. Поддержка удержится, отскок к сопротивлению. RSI 58 — умеренный восходящий импульс.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <p class="preview-cta-hint"><span data-i18n="preview.ctaHintBefore">Откройте </span><a href="app.html?demo=1" data-i18n="footer.demo">демо</a><span data-i18n="preview.ctaHintAfter"> и попробуйте интерфейс за 5 минут.</span></p>
-        </section>
-
-        <!-- Powered by TradingView -->
-        <section class="tv-powered" aria-label="Powered by TradingView">
-            <div class="tv-powered-inner">
-                <div class="tv-powered-content">
-                    <div class="tv-powered-label" data-i18n="tv.poweredBy">Powered by</div>
-                    <div class="tv-powered-brand">
-                        <img class="tv-powered-logo" src="logos/tradingview-logo-vector.svg" alt="TradingView">
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- How it works -->
-        <section class="landing-section landing-how" id="how">
-            <p class="section-label" data-i18n="how.label">Как начать</p>
-            <h2 class="section-title" data-i18n="how.title">Четыре шага до первого сигнала</h2>
-            <div class="steps">
-                <div class="step">
-                    <span class="step-num">01</span>
-                    <h3 class="step-title" data-i18n="how.step1Title">Демо</h3>
-                    <p class="step-desc" data-i18n="how.step1Desc">Запустите терминал на 5 минут без регистрации и оцените интерфейс и AI-анализ.</p>
-                </div>
-                <div class="step">
-                    <span class="step-num">02</span>
-                    <h3 class="step-title" data-i18n="how.step2Title">Вход</h3>
-                    <p class="step-desc" data-i18n="how.step2Desc">Войдите по email или через Google, Facebook, X — один аккаунт на всех устройствах.</p>
-                </div>
-                <div class="step">
-                    <span class="step-num">03</span>
-                    <h3 class="step-title" data-i18n="how.step3Title">Оплата</h3>
-                    <p class="step-desc" data-i18n="how.step3Desc">Lifetime: $49 один раз. Оплата криптой (USDT, TON) — доступ навсегда.</p>
-                </div>
-                <div class="step">
-                    <span class="step-num">04</span>
-                    <h3 class="step-title" data-i18n="how.step4Title">Терминал</h3>
-                    <p class="step-desc" data-i18n="how.step4Desc">Полный доступ: графики, AI-прогноз по горизонтам, эмулятор и история сделок.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Slogan strip (на всю ширину, над метриками) -->
-        <section class="slogan-strip slogan-strip-full" id="slogan-banner">
-            <p class="slogan-strip-text"><span data-i18n="slogan.before">Один интерфейс. </span><span class="slogan-strip-accent" data-i18n="slogan.accent">AI-прогноз</span><span data-i18n="slogan.after"> и полный контроль.</span></p>
-        </section>
-
-        <!-- Все нужные метрики -->
-        <section class="landing-section landing-metrics" id="metrics">
-            <p class="section-label" data-i18n="metrics.label">Метрики</p>
-            <h2 class="section-title" data-i18n="metrics.title">Все нужные метрики в одном месте</h2>
-            <div class="metrics-cards">
-                <article class="metrics-card">
-                    <div class="metrics-card-icon metrics-icon-chart">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    </div>
-                    <h3 data-i18n="metrics.card1Title">Анализ RSI и Моментума</h3>
-                    <p data-i18n="metrics.card1Desc">Моментальный расчёт перекупленности и перепроданности. ИИ вычисляет импульс движения за последние 5 свечей.</p>
-                </article>
-                <article class="metrics-card">
-                    <div class="metrics-card-icon metrics-icon-bolt">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                    </div>
-                    <h3 data-i18n="metrics.card2Title">Zero-Lag Скользящие</h3>
-                    <p data-i18n="metrics.card2Desc">Анализ пересечения краткосрочных и долгосрочных SMA/EMA без задержек. Чёткий контекст рынка.</p>
-                </article>
-                <article class="metrics-card">
-                    <div class="metrics-card-icon metrics-icon-target">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                    </div>
-                    <h3 data-i18n="metrics.card3Title">Уверенность ИИ (%)</h3>
-                    <p data-i18n="metrics.card3Desc">Нейросеть агрегирует все факторы в единый процент уверенности: Спад, Рост или Боковик.</p>
-                </article>
-            </div>
-        </section>
-
-        <!-- Features -->
-        <section class="landing-section landing-features" id="features">
-            <p class="section-label" data-i18n="features.label">Возможности</p>
-            <h2 class="section-title" data-i18n="features.title">Всё, что нужно для анализа и практики</h2>
-            <div class="features-grid">
-                <article class="feature-card">
-                    <div class="feature-icon-wrap">
-                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                    </div>
-                    <h3 data-i18n="features.f1Title">Мультитаймфрейм</h3>
-                    <p data-i18n="features.f1Desc">4 графика в одном окне: 4H, 1H, 15M, 5M. Контекст старших ТФ и детализация младших без переключения.</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon-wrap">
-                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
-                    </div>
-                    <h3 data-i18n="features.f2Title">Прогноз по времени</h3>
-                    <p data-i18n="features.f2Desc">Краткосрочные горизонты от 1 минуты до 1 часа и долгосрочные 4ч, 1д, 1нед с процентом уверенности.</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon-wrap">
-                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    </div>
-                    <h3 data-i18n="features.f3Title">Раннее предупреждение</h3>
-                    <p data-i18n="features.f3Desc">Сигналы смены тренда до разворота. Оценка вероятности и причины — RSI-дивергенция, сужение Bollinger Bands.</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon-wrap">
-                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    </div>
-                    <h3 data-i18n="features.f4Title">Демо-счёт и TP/SL</h3>
-                    <p data-i18n="features.f4Desc">Эмулятор с плечом до 100x, маржа и комиссия 0.04%. Тейк-профит и стоп-лосс с автоматическим срабатыванием.</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon-wrap">
-                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    </div>
-                    <h3 data-i18n="features.f5Title">Криптовалюты в одном месте</h3>
-                    <p data-i18n="features.f5Desc">Список монет по объёму и 24h%. Графики TradingView и AI-анализ для крипто.</p>
-                </article>
-                <article class="feature-card">
-                    <div class="feature-icon-wrap">
-                        <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                    </div>
-                    <h3 data-i18n="features.f6Title">Рекомендации по входам</h3>
-                    <p data-i18n="features.f6Desc">Сценарии лонг/шорт с уровнями входа, стопа и тейков. Учёт индикаторов, ADX и дивергенций.</p>
-                </article>
-            </div>
-        </section>
-
-        <!-- Product: one interface -->
-        <section class="landing-section landing-product">
-            <p class="section-label" data-i18n="product.label">Продукт</p>
-            <h2 class="section-title" data-i18n="product.title">Один терминал вместо нескольких окон</h2>
-            <div class="product-blocks">
-                <div class="product-block">
-                    <span class="product-block-num">1</span>
-                    <h3 data-i18n="product.b1Title">Графики</h3>
-                    <p data-i18n="product.b1Desc">Список инструментов, поиск, сортировка по объёму и 24h%. Один или четыре таймфрейма на экране. RSI на графике.</p>
-                </div>
-                <div class="product-block">
-                    <span class="product-block-num">2</span>
-                    <h3 data-i18n="product.b2Title">AI-панель</h3>
-                    <p data-i18n="product.b2Desc">Направление и сила сигнала, RSI, горизонты, долгосрочный прогноз, индикаторы и текстовый разбор с уровнями.</p>
-                </div>
-                <div class="product-block">
-                    <span class="product-block-num">3</span>
-                    <h3 data-i18n="product.b3Title">Эмулятор</h3>
-                    <p data-i18n="product.b3Desc">Открытие лонг/шорт, плечо, маржа, TP/SL. Баланс $10k, история позиций и закрытие по кнопке или по срабатыванию ордеров.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Pricing: Lifetime -->
-        <section class="landing-section landing-pricing" id="pricing" style="display:none">
-            <p class="section-label" data-i18n="pricing.label">Тариф</p>
-            <h2 class="section-title" data-i18n="pricing.title">Доступ навсегда</h2>
-            <div class="pricing-lifetime-wrap">
-                <div class="pricing-lifetime-card">
-                    <div class="pricing-lifetime-shimmer" aria-hidden="true"></div>
-                    <div class="pricing-lifetime-card-inner">
-                        <h3 class="pricing-lifetime-title" data-i18n="pricing.cardTitle">Lifetime License</h3>
-                        <p class="pricing-lifetime-price"><span class="pricing-currency">$</span>49<span class="pricing-lifetime-forever" data-i18n="pricing.forever">/ навсегда</span></p>
-                        <ul class="pricing-lifetime-list">
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li1">Полный доступ к терминалу в браузере</span></li>
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li2">Мгновенный анализ 141+ монет</span></li>
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li3">Бесплатные обновления алгоритма</span></li>
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li4">Поддержка в Telegram</span></li>
-                        </ul>
-                        <button type="button" class="landing-btn landing-btn-primary landing-btn-block landing-btn-crypto" id="btn-pricing-lifetime" data-i18n="pricing.payBtn">
-                            Оплатить Crypto
-                        </button>
-                        <p class="pricing-lifetime-methods" data-i18n="pricing.methods">Поддерживаем USDT (TRC20, BEP20), TON</p>
-                    </div>
-                </div>
-            </div>
-            <p class="pricing-note"><span data-i18n="pricing.noteBefore">Сначала попробуйте </span><a href="app.html?demo=1" data-i18n="cta.demoBtn">демо 5 минут</a><span data-i18n="pricing.noteAfter"> без регистрации.</span></p>
-        </section>
-
-        <!-- Final CTA -->
-        <section class="landing-section landing-cta-section">
-            <div class="hero-bg cta-bg" aria-hidden="true">
-                <div class="hero-glow"></div>
-                <div class="hero-grid"></div>
-            </div>
-            <h2 class="section-title cta-section-title" data-i18n="cta.title">Готовы попробовать?</h2>
-            <p class="landing-subtitle cta-section-sub" data-i18n="cta.subtitle">Запустите демо или войдите в аккаунт и откройте полный терминал.</p>
-            <div class="landing-cta">
-                <a href="app.html?demo=1" class="landing-btn landing-btn-demo" data-i18n="cta.demoBtn">Демо 5 минут</a>
-                <button type="button" class="landing-btn landing-btn-primary" id="btn-open-terminal-2" data-i18n="cta.enterBtn">Войти в Терминал</button>
-            </div>
-        </section>
-    </main>
-
-    <footer class="landing-footer">
-        <div class="footer-inner">
-            <a href="index.html" class="landing-logo">FuturesTerminal</a>
-            <div class="footer-links">
-                <a href="app.html" data-i18n="footer.terminal">Терминал</a>
-                <a href="app.html?demo=1" data-i18n="footer.demo">Демо</a>
-            </div>
-            <p class="footer-copy" data-i18n="footer.copy">© FuturesTerminal. Торговля сопряжена с рисками.</p>
-        </div>
-    </footer>
-
-    <!-- Модалка входа -->
-    <div class="modal-overlay" id="auth-modal-overlay">
-        <div class="modal auth-modal" id="auth-modal">
-            <button type="button" class="modal-close" id="auth-close" aria-label="Закрыть" data-i18n-aria="auth.closeAria">✕</button>
-            <h2 class="modal-title" data-i18n="auth.modalTitle">Вход в Терминал</h2>
-            <p class="modal-subtitle" data-i18n="auth.modalSubtitle">Войдите, чтобы оформить подписку и получить полный доступ.</p>
-
-            <div class="auth-tabs" id="auth-tabs">
-                <button type="button" class="auth-tab active" id="auth-tab-login" data-i18n="auth.tabLogin">Вход</button>
-                <button type="button" class="auth-tab" id="auth-tab-register" data-i18n="auth.tabRegister">Регистрация</button>
-            </div>
-
-            <form class="auth-form" id="auth-form">
-                <label class="input-label" data-i18n="auth.emailLabel">Email</label>
-                <input type="email" class="input-field" id="auth-email" placeholder="your@email.com" data-i18n-placeholder="auth.emailPlaceholder" required autocomplete="email">
-
-                <label class="input-label" data-i18n="auth.passwordLabel">Пароль</label>
-                <input type="password" class="input-field" id="auth-password" placeholder="••••••••" data-i18n-placeholder="auth.passwordPlaceholder" autocomplete="current-password">
-
-                <button type="submit" class="landing-btn landing-btn-primary landing-btn-block" id="auth-submit" data-i18n="auth.submitBtn">
-                    Войти по email
-                </button>
-
-                <div class="auth-error" id="auth-error" role="alert" aria-live="polite" style="display:none"></div>
-            </form>
-
-            <div class="auth-divider">
-                <span data-i18n="auth.divider">или войти через</span>
-            </div>
-
-            <div class="auth-social">
-                <button type="button" class="auth-social-btn google" id="auth-google" title="Google">
-                    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                    Google
-                </button>
-            </div>
-
-            <p class="auth-footer-note" data-i18n="auth.footerNote">Регистрируясь, вы соглашаетесь с условиями использования.</p>
-        </div>
-    </div>
-
-    <!-- Модалка оплаты (Lifetime) -->
-    <div class="modal-overlay" id="payment-modal-overlay">
-        <div class="modal payment-modal payment-modal-lifetime" id="payment-modal">
-            <button type="button" class="modal-close" id="payment-close" aria-label="Закрыть" data-i18n-aria="auth.closeAria">✕</button>
-            <h2 class="modal-title" data-i18n="payment.modalTitle">Lifetime License</h2>
-            <p class="modal-subtitle" data-i18n="payment.modalSubtitle">$49 — доступ к терминалу навсегда.</p>
-
-            <ul class="payment-lifetime-list">
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li1">Полный доступ к терминалу в браузере</span></li>
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li2">Мгновенный анализ 141+ монет</span></li>
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li3">Бесплатные обновления алгоритма</span></li>
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li4">Поддержка в Telegram</span></li>
-            </ul>
-
-            <button type="button" class="landing-btn landing-btn-primary landing-btn-block landing-btn-crypto" id="payment-submit" data-i18n="payment.payBtn">
-                Оплатить Crypto
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <a href="index.html" class="topbar-logo" title="На главную" data-i18n-title="topbar.homeTitle">FuturesTerminal</a>
+        <div class="topbar-spacer"></div>
+        <button class="topbar-watchlist-btn" id="watchlist-toggle" onclick="toggleWatchlist()">★ <span
+                id="wl-count">0</span></button>
+        <button class="topbar-emulator-btn" id="emulator-toggle" onclick="toggleEmulator()" data-i18n="topbar.emulator">⚡ Эмулятор</button>
+        <button class="topbar-mtf-btn mtf-toggle" id="mtf-toggle" onclick="toggleMultiTF()" title="4 таймфрейма" data-i18n-title="chart.mtfTitle">⊞ 4TF</button>
+        <div class="topbar-demo-balance" id="demo-balance-display" title="Ваш демо баланс">$10,000.00</div>
+        <button class="topbar-sound-btn" id="sound-toggle" onclick="toggleSound()" title="Звуковые уведомления" aria-label="Звуковые уведомления" data-i18n-title="topbar.soundTitle" data-i18n-aria="topbar.soundAria">
+            <svg class="topbar-sound-icon topbar-sound-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+            <svg class="topbar-sound-icon topbar-sound-icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        </button>
+        <div class="topbar-lang-wrap" id="topbar-lang-wrap">
+            <button class="topbar-lang-btn" id="topbar-lang-btn" title="Язык" aria-label="Язык" data-i18n-title="lang.title" data-i18n-aria="lang.aria">
+                <svg class="topbar-lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </button>
-            <p class="payment-note" data-i18n="payment.note">Поддерживаем USDT (TRC20, BEP20), TON</p>
+            <div class="topbar-lang-dropdown" id="topbar-lang-dropdown">
+                <div class="topbar-lang-title" data-i18n="lang.menuTitle">Язык</div>
+                <button type="button" class="topbar-lang-option" data-lang="ru">Русский</button>
+                <button type="button" class="topbar-lang-option" data-lang="en">English</button>
+            </div>
+        </div>
+        <button class="topbar-user-btn" id="user-menu-btn" onclick="toggleUserMenu()" title="Аккаунт" aria-label="Меню пользователя" data-i18n-title="account.label" data-i18n-aria="account.menuAria">
+            <svg class="topbar-user-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+    </div>
+
+    <!-- User menu popup -->
+    <div class="user-menu-overlay" id="user-menu-overlay" onclick="toggleUserMenu()"></div>
+    <div class="user-menu-popup" id="user-menu-popup">
+        <div class="user-menu-header">
+            <span class="user-menu-title" data-i18n="account.label">Аккаунт</span>
+            <span class="user-menu-subtitle" id="user-menu-subtitle"></span>
+        </div>
+        <div class="user-menu-paid" id="user-menu-paid">
+            <p class="user-menu-status"><svg class="user-menu-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span data-i18n="account.lifetimeActive">Бесплатный полный доступ</span></p>
+            <a href="index.html" class="user-menu-item user-menu-item-logout"><svg class="user-menu-item-icon user-menu-icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span data-i18n="account.logout">Выйти</span></a>
+            <a href="#" class="user-menu-item user-menu-download" id="user-menu-download"><svg class="user-menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg><span data-i18n="account.downloadApp">Скачать мобильное приложение</span></a>
+        </div>
+        <div class="user-menu-unpaid" id="user-menu-unpaid" style="display:none">
+            <p class="user-menu-status"><svg class="user-menu-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span data-i18n="account.fullAccess">Полный доступ к терминалу</span></p>
+            <button type="button" class="user-menu-btn-buy" id="user-menu-buy"><svg class="user-menu-btn-buy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="user-menu-btn-buy-text" data-i18n="account.buy">Купить</span></button>
+            <a href="index.html" class="user-menu-item user-menu-item-logout"><svg class="user-menu-item-icon user-menu-icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span data-i18n="account.exitHome">Выйти на главную</span></a>
+            <a href="#" class="user-menu-item user-menu-download" id="user-menu-download-guest"><svg class="user-menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg><span data-i18n="account.downloadApp">Скачать мобильное приложение</span></a>
         </div>
     </div>
 
-    <!-- Сообщение после истечения демо -->
-    <div class="demo-expired-toast" id="demo-expired-toast" style="display:none">
-        <span data-i18n="demoExpired.text">Демо-доступ закончился. Войдите и оплатите подписку для полного доступа.</span>
-        <button type="button" class="toast-close" id="demo-expired-close">✕</button>
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
+        <!-- Mobile sidebar dimmer (tap to close) -->
+        <div class="sidebar-scrim" id="sidebar-scrim" onclick="toggleSidebar()" aria-hidden="true"></div>
+
+        <!-- LEFT: Coin List -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-search">
+                <svg class="sidebar-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="search-input" placeholder="Поиск монеты..." data-i18n-placeholder="topbar.searchCrypto" oninput="filterCoins()" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="sidebar-header">
+                <button class="sort-btn active" id="sort-vol" onclick="sortCoins('volume')" data-i18n="sidebar.volume">Объём за 24 часа</button>
+                <button class="sort-btn" id="sort-trades" onclick="sortCoins('trades')" data-i18n="sidebar.trades">Количество сделок</button>
+                <button class="sort-btn" id="sort-name" onclick="sortCoins('name')" data-i18n="sidebar.name">По алфавиту</button>
+            </div>
+            <div class="coin-list" id="coin-list">
+                <!-- Filled by JS -->
+            </div>
+            <div class="sidebar-count" id="sidebar-count" data-i18n="sidebar.loading">Загрузка...</div>
+        </div>
+
+        <!-- CENTER: Chart -->
+        <div class="chart-area" id="chart-area">
+            <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()"
+                title="Свернуть панель" data-i18n-title="chart.collapseTitle" aria-label="Свернуть панель">
+                <svg class="sidebar-toggle-icon sidebar-toggle-icon-collapse" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14.5 5.5L8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg class="sidebar-toggle-icon sidebar-toggle-icon-expand" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9.5 5.5L16 12l-6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+
+            <div class="chart-main-col">
+            <!-- Custom chart toolbar (replaces TradingView header) -->
+            <div class="chart-toolbar" id="chart-toolbar">
+                <button type="button" class="ctb-symbol" id="ctb-symbol" onclick="focusCoinSearch()" title="Поиск монеты">
+                    <svg class="ctb-search-ico" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M20 20l-3.5-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span id="ctb-symbol-text">---</span>
+                </button>
+                <span class="ctb-sep"></span>
+                <div class="ctb-dd" id="ctb-style-wrap">
+                    <button type="button" class="ctb-btn ctb-style-btn" id="ctb-style-btn" onclick="toggleCtbMenu('style')" title="Тип графика">
+                        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="4" y="10" width="3" height="8" fill="currentColor"/><rect x="10" y="6" width="3" height="12" fill="currentColor"/><rect x="16" y="8" width="3" height="10" fill="currentColor"/></svg>
+                    </button>
+                    <div class="ctb-menu" id="ctb-style-menu" style="display:none"></div>
+                </div>
+                <span class="ctb-sep"></span>
+                <div class="ctb-dd" id="ctb-ind-wrap">
+                    <button type="button" class="ctb-btn" id="ctb-ind-btn" onclick="toggleCtbMenu('ind')">
+                        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span data-i18n="chart.indicators">Индикаторы</span>
+                    </button>
+                    <div class="ctb-menu ctb-menu-ind" id="ctb-ind-menu" style="display:none"></div>
+                </div>
+                <span class="ctb-sep"></span>
+                <div class="tf-toolbar-group">
+                    <div class="tf-favorites" id="tf-favorites"></div>
+                    <button type="button" class="tf-add-btn" id="tf-picker-btn" title="Все таймфреймы" data-i18n-title="tf.allTitle">＋</button>
+                    <div class="tf-picker" id="tf-picker-dropdown" style="display:none">
+                        <div class="tf-picker-head" data-i18n="tf.pickHint">Нажмите ★ чтобы добавить в панель</div>
+                        <div id="tf-picker-list"></div>
+                    </div>
+                </div>
+                <div class="ctb-spacer"></div>
+            </div>
+            <div class="chart-loading" id="chart-loading">
+                <span style="color:var(--text-dim)" data-i18n="chart.selectCoin">Выберите монету для анализа</span>
+            </div>
+
+            <!-- EMULATOR PANEL -->
+            <div class="emulator-panel" id="emulator-panel">
+                <div class="emu-header">
+                    <h4 data-i18n="emu.title">⚡ Демо Торговля</h4>
+                    <button class="emu-close" onclick="toggleEmulator()">✕</button>
+                </div>
+                <!-- Selected Coin -->
+                <div class="emu-coin-info">
+                    <span class="emu-coin" id="emu-symbol">BTCUSDT</span>
+                    <span class="emu-price" id="emu-price">0.00</span>
+                </div>
+
+                <div class="emu-controls">
+                    <!-- Leverage -->
+                    <div class="emu-input-group">
+                        <div class="emu-label-row">
+                            <label data-i18n="emu.leverage">Плечо (Leverage)</label>
+                            <span id="emu-leverage-val">20x</span>
+                        </div>
+                        <input type="range" id="emu-leverage" min="1" max="100" value="20" oninput="updateEmulatorUI()">
+                    </div>
+
+                    <!-- Margin -->
+                    <div class="emu-input-group">
+                        <div class="emu-label-row">
+                            <label data-i18n="emu.margin">Маржа (USD)</label>
+                        </div>
+                        <input type="number" id="emu-margin" value="100" min="1" step="1" oninput="updateEmulatorUI()">
+                    </div>
+
+                    <!-- Volume calculation -->
+                    <div class="emu-summary">
+                        <div class="emu-summary-row">
+                            <span data-i18n="emu.volumeLabel">Объём позиции:</span>
+                            <span id="emu-volume">$2,000.00</span>
+                        </div>
+                        <div class="emu-summary-row">
+                            <span data-i18n="emu.feeLabel">Комиссия (0.04%):</span>
+                            <span id="emu-fee">$0.80</span>
+                        </div>
+                    </div>
+
+                    <!-- TP/SL Section -->
+                    <div class="emu-tpsl-section">
+                        <div class="emu-tpsl-toggle" onclick="toggleTPSL()">
+                            <span class="emu-tpsl-toggle-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                TP / SL
+                            </span>
+                            <label class="emu-switch" onclick="event.stopPropagation()">
+                                <input type="checkbox" id="emu-tpsl-enabled" onchange="onTPSLToggle()">
+                                <span class="emu-switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="emu-tpsl-fields" id="emu-tpsl-fields" style="display:none">
+                            <!-- Take Profit -->
+                            <div class="emu-tpsl-row tp">
+                                <div class="emu-tpsl-label">
+                                    <span class="tpsl-dot tp-dot"></span> <span data-i18n="emu.tp">Тейк-профит</span>
+                                </div>
+                                <div class="emu-tpsl-input-wrap">
+                                    <input type="number" id="emu-tp-price" data-i18n-placeholder="emu.activationPrice" placeholder="Цена активации" step="any" oninput="updateTPSLEstimate()">
+                                    <span class="emu-tpsl-unit">USDT</span>
+                                </div>
+                                <div class="emu-tpsl-pnl" id="emu-tp-pnl">PnL: —</div>
+                            </div>
+
+                            <!-- Stop Loss -->
+                            <div class="emu-tpsl-row sl">
+                                <div class="emu-tpsl-label">
+                                    <span class="tpsl-dot sl-dot"></span> <span data-i18n="emu.sl">Стоп-лосс</span>
+                                </div>
+                                <div class="emu-tpsl-input-wrap">
+                                    <input type="number" id="emu-sl-price" data-i18n-placeholder="emu.activationPrice" placeholder="Цена активации" step="any" oninput="updateTPSLEstimate()">
+                                    <span class="emu-tpsl-unit">USDT</span>
+                                </div>
+                                <div class="emu-tpsl-pnl" id="emu-sl-pnl">PnL: —</div>
+                            </div>
+
+                            <div class="emu-tpsl-hint" data-i18n="emu.tpslHint">
+                                TP/SL сработают автоматически при достижении цены.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="emu-actions">
+                    <button class="emu-btn btn-long" onclick="openPosition('LONG')" data-i18n="emu.long">UP (Ло́нг)</button>
+                    <button class="emu-btn btn-short" onclick="openPosition('SHORT')" data-i18n="emu.short">DOWN (Шорт)</button>
+                </div>
+
+                <div class="emu-footer">
+                    <button class="emu-history-btn" onclick="toggleHistoryModal()"><svg class="emu-history-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span data-i18n="emu.history">Мои позиции и история</span></button>
+                </div>
+            </div>
+
+            <div class="chart-viewport" id="chart-viewport">
+                <div id="tradingview-container" style="width:100%;height:100%"></div>
+            </div>
+            </div><!-- /.chart-main-col -->
+        </div>
+
+        <!-- RIGHT: AI Panel -->
+        <div class="ai-panel" id="ai-panel">
+            <div class="ai-header">
+                <div class="ai-header-title-wrap">
+                    <span class="pulsing-rocket" aria-hidden="true">🚀</span>
+                    <h3>AI Analysis</h3>
+                </div>
+                <button type="button" class="ai-panel-close mobile-only" onclick="closeAIPanelMobile()" aria-label="Закрыть" data-i18n-aria="auth.closeAria">✕</button>
+            </div>
+            <div class="ai-loading" id="ai-loading" data-i18n="ai.selectCoin">Выберите монету из списка</div>
+            <div id="ai-content" style="display:none">
+                <!-- Symbol bar -->
+                <div class="ai-symbol-bar">
+                    <span class="ai-symbol" id="ai-symbol">---</span>
+                    <span class="ai-price-display" id="ai-price">---</span>
+                </div>
+                <!-- Volatility warning (BB squeeze — separate from reversal) -->
+                <div class="volatility-warning" id="volatility-warning" style="display:none">
+                    <strong data-i18n="ai.volatilityTitle">⚡ Ожидается сильное движение</strong>
+                    <span id="volatility-reasons"></span>
+                </div>
+                <!-- Early Warning (pre-reversal signal) -->
+                <div class="early-warning" id="early-warning" style="display:none">
+                    <div class="early-warning-header">
+                        <strong>
+                            <svg class="ew-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+                                <rect x="3" y="3" width="18" height="18"/>
+                                <path d="M12 7v6"/>
+                                <path d="M12 16h.01"/>
+                            </svg>
+                            <span id="early-warning-title" data-i18n="ai.earlyWarningTitle">Внимание</span>
+                        </strong>
+                        <span class="early-warning-score" id="early-warning-score">0%</span>
+                    </div>
+                    <span id="early-warning-reasons"></span>
+                </div>
+                <!-- SMC Forecast (Order Block / FVG / Liquidity) -->
+                <div class="ai-smc-forecast" id="ai-smc-forecast">
+                    <div id="smc-forecast-panel"></div>
+                </div>
+                <!-- Signals / scoring / ADX (above short-term) -->
+                <div class="ai-score-summary" id="ai-score-summary" style="display:none"></div>
+                <!-- Short-term forecast (1м, 5м, 30м, 1ч) -->
+                <div class="ai-shortterm" id="ai-shortterm">
+                    <div class="ai-shortterm-title" data-i18n="ai.shorttermTitle">Краткосрочный прогноз</div>
+                    <div class="shortterm-grid" id="shortterm-grid"></div>
+                </div>
+                <!-- Long-term forecast -->
+                <div class="ai-longterm" id="ai-longterm">
+                    <div class="ai-longterm-title" data-i18n="ai.longtermTitle">Долгосрочный прогноз</div>
+                    <div class="longterm-grid" id="longterm-grid"></div>
+                </div>
+                <!-- Indicators -->
+                <div class="ai-indicators">
+                    <div class="ai-indicators-title" data-i18n="ai.indicatorsTitle">Индикаторы</div>
+                    <div class="indicator-grid" id="indicator-grid"></div>
+                </div>
+                <!-- Reasoning -->
+                <div class="ai-reasoning">
+                    <div class="ai-reasoning-title" data-i18n="ai.reasoningTitle">Анализ</div>
+                    <div id="reasoning-list"></div>
+                </div>
+                <!-- Detailed AI Forecast -->
+                <div class="ai-forecast" id="ai-forecast"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Owner shield first, then landing -->
-    <script src="owner-config.js?v=20260726-ft5"></script>
-    <script src="shield.js?v=20260726-ft5"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js?v=20260726-ft5"></script>
-    <script src="landing.js?v=20260726-ft5"></script>
+    <!-- WATCHLIST PANEL (bottom) -->
+    <div class="watchlist-panel" id="watchlist-panel">
+        <div class="watchlist-header">
+            <h4 data-i18n="watchlist.title">★ Watchlist</h4>
+            <button class="watchlist-close" onclick="toggleWatchlist()">✕</button>
+        </div>
+        <div class="watchlist-grid" id="watchlist-grid"></div>
+    </div>
+
+    <!-- Audio elements (optional: add sound/UP.mp3, DOWN.mp3, SIDE.mp3 to www/sound/) -->
+    <audio id="snd-up" src="sound/UP.mp3" preload="none"></audio>
+    <audio id="snd-down" src="sound/DOWN.mp3" preload="none"></audio>
+    <audio id="snd-side" src="sound/SIDE.mp3" preload="none"></audio>
+
+    <!-- TRADING HISTORY MODAL -->
+    <div class="history-modal-overlay" id="history-modal-overlay"
+        onclick="if(event.target===this) toggleHistoryModal()">
+        <div class="history-modal">
+            <div class="hm-header">
+                <h3 data-i18n="hm.title">💼 Демо Счёт — Позиции и История</h3>
+                <button class="hm-close" onclick="toggleHistoryModal()">✕</button>
+            </div>
+
+            <div class="hm-tabs">
+                <button class="hm-tab active" id="tab-active-pos" onclick="switchHistoryTab('active')"><span data-i18n="hm.tabActive">Открытые позиции</span>
+                    <span id="active-pos-count">(0)</span></button>
+                <button class="hm-tab" id="tab-closed-pos" onclick="switchHistoryTab('closed')" data-i18n="hm.tabClosed">История сделок</button>
+                <div class="hm-balance-info">
+                    <span data-i18n="hm.balance">Баланс</span>: <strong id="hm-balance">$10,000.00</strong>
+                    <button class="hm-reset-btn" onclick="resetDemoAccount()" title="Сбросить счет до $10k" data-i18n-title="hm.resetTitle">🔄</button>
+                </div>
+            </div>
+
+            <div class="hm-content">
+                <!-- ACTIVE POSITIONS -->
+                <div class="hm-table-container" id="hm-active-container">
+                    <table class="hm-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="hm.coin">Монета</th>
+                                <th data-i18n="hm.type">Тип</th>
+                                <th data-i18n="hm.leverage">Плечо</th>
+                                <th data-i18n="hm.margin">Маржа</th>
+                                <th data-i18n="hm.entryPrice">Цена входа</th>
+                                <th data-i18n="hm.currentPrice">Тек. цена</th>
+                                <th data-i18n="hm.pnl">PnL (ROE%)</th>
+                                <th data-i18n="hm.action">Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hm-active-tbody">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- CLOSED POSITIONS -->
+                <div class="hm-table-container" id="hm-closed-container" style="display:none">
+                    <table class="hm-table">
+                        <thead>
+                            <tr>
+                                <th data-i18n="hm.closeTime">Время закрытия</th>
+                                <th data-i18n="hm.coin">Монета</th>
+                                <th data-i18n="hm.type">Тип</th>
+                                <th data-i18n="hm.marginLeverage">Маржа / Плечо</th>
+                                <th data-i18n="hm.entryExit">Вход - Выход</th>
+                                <th data-i18n="hm.pnl">PnL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hm-closed-tbody">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Owner shield first, then app -->
+    <script src="owner-config.js?v=20260726-ft6"></script>
+    <script src="shield.js?v=20260726-ft6"></script>
+    <script src="ai-engine.js?v=20260726-ft6"></script>
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script src="app.js?v=20260726-ft6"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
+    <script src="firebase-init.js?v=20260726-ft6" defer></script>
 </body>
 
 </html>
