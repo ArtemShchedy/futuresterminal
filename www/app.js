@@ -143,11 +143,20 @@
 
     function initFirebaseAccess() {
         var wf = window.appFirebase;
+        // Auth backend off — unlock terminal immediately (no black/gated wait)
+        if (wf && wf.enabled === false) {
+            accessState.ready = true;
+            accessState.isPaid = SITE_FREE ? true : false;
+            releaseAppBootLock();
+            return;
+        }
         if (!wf || !wf.auth || !wf.db || !wf.FieldValue) {
             if (!initFirebaseAccess._retries) initFirebaseAccess._retries = 0;
             initFirebaseAccess._retries++;
             if (initFirebaseAccess._retries > 80) {
                 accessState.ready = true;
+                accessState.isPaid = SITE_FREE ? true : false;
+                releaseAppBootLock();
                 return;
             }
             setTimeout(initFirebaseAccess, 50);

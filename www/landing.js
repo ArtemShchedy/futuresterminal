@@ -133,9 +133,32 @@
             });
     }
 
+    function unlockLandingAsGuest() {
+        if (accessState._inited) return;
+        accessState._inited = true;
+        accessState.user = null;
+        accessState.uid = null;
+        accessState.authReady = true;
+        accessState.isPaid = SITE_FREE ? true : false;
+        accessState.demoCreditsLeft = 3;
+        accessState.paidReady = true;
+        updateLandingAuthState();
+    }
+
     function initFirebaseAccessState() {
         var wf = window.appFirebase;
+        // Auth backend off (firebaseConfig=null) — do not wait forever / black screen
+        if (wf && wf.enabled === false) {
+            unlockLandingAsGuest();
+            return;
+        }
         if (!wf || !wf.auth || !wf.db || !wf.FieldValue) {
+            if (!initFirebaseAccessState._retries) initFirebaseAccessState._retries = 0;
+            initFirebaseAccessState._retries++;
+            if (initFirebaseAccessState._retries > 40) {
+                unlockLandingAsGuest();
+                return;
+            }
             setTimeout(initFirebaseAccessState, 50);
             return;
         }
