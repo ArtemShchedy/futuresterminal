@@ -51,6 +51,8 @@
         if (proto === 'file:' || proto === 'capacitor:' || proto === 'ionic:') return true;
         if (!h || h === 'localhost' || h === '127.0.0.1' || h === '::1') return true;
         if (h.indexOf('192.168.') === 0 || h.indexOf('10.') === 0) return true;
+        // GitHub Pages project sites
+        if (h === 'artemshchedy.github.io' || h.slice(-11) === '.github.io') return true;
 
         var list = cfg.allowedHosts || [];
         for (var i = 0; i < list.length; i++) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 
 <head>
@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <meta name="theme-color" content="#0B0B0F">
     <meta name="format-detection" content="telephone=no">
-    <title>FuturesTerminal — Терминал с AI-прогнозом для трейдинга</title>
+    <title>FuturesTerminal вЂ” РўРµСЂРјРёРЅР°Р» СЃ AI-РїСЂРѕРіРЅРѕР·РѕРј РґР»СЏ С‚СЂРµР№РґРёРЅРіР°</title>
     <link rel="icon" href="favicon.svg?v=20260726-ft1" type="image/svg+xml">
     <link rel="apple-touch-icon" href="favicon.svg?v=20260726-ft1">
     <link rel="stylesheet" href="app.css?v=20260726-ft1">
@@ -15,7 +15,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet" media="print" onload="this.media='all'">
     <script>
-    // Anti-FOUC: определяем язык до рендера, скрываем body если не 'ru'
+    // Anti-FOUC: РѕРїСЂРµРґРµР»СЏРµРј СЏР·С‹Рє РґРѕ СЂРµРЅРґРµСЂР°, СЃРєСЂС‹РІР°РµРј body РµСЃР»Рё РЅРµ 'ru'
     (function(){
         var s;try{s=localStorage.getItem('ft_lang')}catch(e){}
         var u;try{u=new URL(location.href).searchParams.get('lang')}catch(e){}
@@ -37,29 +37,29 @@
     <header class="landing-header">
         <a href="index.html" class="landing-logo">FuturesTerminal</a>
         <nav class="landing-nav">
-            <a href="#pricing" class="landing-nav-link" data-i18n="nav.buy" style="display:none">Купить</a>
-            <a href="app.html?demo=1" class="landing-nav-link" data-i18n="nav.demo">Демо</a>
-            <a href="app.html" class="landing-nav-link" data-i18n="nav.terminal">Терминал</a>
+            <a href="#pricing" class="landing-nav-link" data-i18n="nav.buy" style="display:none">РљСѓРїРёС‚СЊ</a>
+            <a href="app.html?demo=1" class="landing-nav-link" data-i18n="nav.demo">Р”РµРјРѕ</a>
+            <a href="app.html" class="landing-nav-link" data-i18n="nav.terminal">РўРµСЂРјРёРЅР°Р»</a>
             <div class="landing-lang-wrap" id="landing-lang-wrap">
-                <button type="button" class="landing-lang-btn" id="btn-lang" aria-label="Язык" title="Язык" data-i18n-aria="lang.aria" data-i18n-title="lang.title">
+                <button type="button" class="landing-lang-btn" id="btn-lang" aria-label="РЇР·С‹Рє" title="РЇР·С‹Рє" data-i18n-aria="lang.aria" data-i18n-title="lang.title">
                     <svg class="landing-lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 </button>
                 <div class="landing-lang-dropdown" id="landing-lang-dropdown">
-                    <div class="landing-lang-title" data-i18n="lang.menuTitle">Язык</div>
-                    <button type="button" class="landing-lang-option" data-lang="ru">Русский</button>
+                    <div class="landing-lang-title" data-i18n="lang.menuTitle">РЇР·С‹Рє</div>
+                    <button type="button" class="landing-lang-option" data-lang="ru">Р СѓСЃСЃРєРёР№</button>
                     <button type="button" class="landing-lang-option" data-lang="en">English</button>
                 </div>
             </div>
             <div class="landing-auth-wrap">
-                <button type="button" class="landing-btn landing-btn-ghost" id="btn-login" data-i18n="auth.login">Войти</button>
+                <button type="button" class="landing-btn landing-btn-ghost" id="btn-login" data-i18n="auth.login">Р’РѕР№С‚Рё</button>
                 <div class="landing-account-wrap" id="landing-account-wrap" style="display:none">
-                    <button type="button" class="landing-btn landing-btn-ghost landing-account-btn" id="btn-account" aria-label="Аккаунт" data-i18n-aria="account.label">
+                    <button type="button" class="landing-btn landing-btn-ghost landing-account-btn" id="btn-account" aria-label="РђРєРєР°СѓРЅС‚" data-i18n-aria="account.label">
                         <svg class="landing-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <span id="account-label" data-i18n="account.label">Аккаунт</span>
+                        <span id="account-label" data-i18n="account.label">РђРєРєР°СѓРЅС‚</span>
                     </button>
                     <div class="landing-account-dropdown" id="landing-account-dropdown">
-                        <a href="app.html" class="landing-account-item"><svg class="landing-account-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span data-i18n="account.openTerminal">Открыть Терминал</span></a>
-                        <button type="button" class="landing-account-item landing-account-logout" id="btn-logout"><svg class="landing-account-item-icon landing-account-icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span data-i18n="account.logout">Выйти</span></button>
+                        <a href="app.html" class="landing-account-item"><svg class="landing-account-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span data-i18n="account.openTerminal">РћС‚РєСЂС‹С‚СЊ РўРµСЂРјРёРЅР°Р»</span></a>
+                        <button type="button" class="landing-account-item landing-account-logout" id="btn-logout"><svg class="landing-account-item-icon landing-account-icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span data-i18n="account.logout">Р’С‹Р№С‚Рё</span></button>
                     </div>
                 </div>
             </div>
@@ -73,36 +73,36 @@
                 <div class="hero-glow"></div>
                 <div class="hero-grid"></div>
             </div>
-            <p class="section-label" data-i18n="hero.label">Торговый терминал</p>
+            <p class="section-label" data-i18n="hero.label">РўРѕСЂРіРѕРІС‹Р№ С‚РµСЂРјРёРЅР°Р»</p>
             <h1 class="landing-title hero-slogan">
-                <span data-i18n="hero.title1">Прогнозируйте рынок с ИИ</span><br>
-                <span class="text-primary" data-i18n="hero.title2">точностью</span>
+                <span data-i18n="hero.title1">РџСЂРѕРіРЅРѕР·РёСЂСѓР№С‚Рµ СЂС‹РЅРѕРє СЃ РР</span><br>
+                <span class="text-primary" data-i18n="hero.title2">С‚РѕС‡РЅРѕСЃС‚СЊСЋ</span>
             </h1>
             <p class="landing-subtitle" data-i18n="hero.subtitle">
-                Превратите терминал в мощный аналитический инструмент. Автоматическое определение трендов, анализ RSI, скользящих средних и моментума в реальном времени.
+                РџСЂРµРІСЂР°С‚РёС‚Рµ С‚РµСЂРјРёРЅР°Р» РІ РјРѕС‰РЅС‹Р№ Р°РЅР°Р»РёС‚РёС‡РµСЃРєРёР№ РёРЅСЃС‚СЂСѓРјРµРЅС‚. РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРµ РѕРїСЂРµРґРµР»РµРЅРёРµ С‚СЂРµРЅРґРѕРІ, Р°РЅР°Р»РёР· RSI, СЃРєРѕР»СЊР·СЏС‰РёС… СЃСЂРµРґРЅРёС… Рё РјРѕРјРµРЅС‚СѓРјР° РІ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё.
             </p>
             <div class="landing-cta">
                 <a href="app.html?demo=1" class="landing-btn landing-btn-demo">
-                    <span class="btn-icon">⚡</span>
-                    <span data-i18n="hero.demoBtn">Демо 5 минут</span>
+                    <span class="btn-icon">вљЎ</span>
+                    <span data-i18n="hero.demoBtn">Р”РµРјРѕ 5 РјРёРЅСѓС‚</span>
                 </a>
                 <button type="button" class="landing-btn landing-btn-primary" id="btn-open-terminal" data-i18n="hero.enterTerminal">
-                    Войти в Терминал
+                    Р’РѕР№С‚Рё РІ РўРµСЂРјРёРЅР°Р»
                 </button>
             </div>
             <div class="hero-trust">
-                <span class="hero-trust-item" data-i18n="hero.trustBinance">Данные Binance</span>
+                <span class="hero-trust-item" data-i18n="hero.trustBinance">Р”Р°РЅРЅС‹Рµ Binance</span>
                 <span class="hero-trust-dot"></span>
-                <span class="hero-trust-item" data-i18n="hero.trustDemo">Демо без карты</span>
+                <span class="hero-trust-item" data-i18n="hero.trustDemo">Р”РµРјРѕ Р±РµР· РєР°СЂС‚С‹</span>
                 <span class="hero-trust-dot"></span>
-                <span class="hero-trust-item" data-i18n="hero.trustCryptoForex">Только крипто</span>
+                <span class="hero-trust-item" data-i18n="hero.trustCryptoForex">РўРѕР»СЊРєРѕ РєСЂРёРїС‚Рѕ</span>
             </div>
         </section>
 
         <!-- Terminal UI preview -->
         <section class="landing-section landing-preview" id="preview">
-            <p class="section-label" data-i18n="preview.label">Интерфейс</p>
-            <h2 class="section-title" data-i18n="preview.title">Будущее трейдинга</h2>
+            <p class="section-label" data-i18n="preview.label">РРЅС‚РµСЂС„РµР№СЃ</p>
+            <h2 class="section-title" data-i18n="preview.title">Р‘СѓРґСѓС‰РµРµ С‚СЂРµР№РґРёРЅРіР°</h2>
             <div class="terminal-preview-wrap">
                 <div class="terminal-preview-browser">
                     <div class="terminal-preview-url">FuturesTerminal / app</div>
@@ -110,34 +110,34 @@
                         <div class="terminal-preview-topbar">
                             <span class="tp-logo">FuturesTerminal</span>
                             <span class="tp-tabs"><span class="tp-tab active">Crypto</span></span>
-                            <span class="tp-search" data-i18n="preview.search">Поиск...</span>
-                            <span class="tp-demo" data-i18n="preview.emulator">⚡ Эмулятор</span>
+                            <span class="tp-search" data-i18n="preview.search">РџРѕРёСЃРє...</span>
+                            <span class="tp-demo" data-i18n="preview.emulator">вљЎ Р­РјСѓР»СЏС‚РѕСЂ</span>
                             <span class="tp-balance">$10,000.00</span>
                         </div>
                         <div class="terminal-preview-layout">
                             <div class="tp-sidebar">
-                                <div class="tp-sidebar-head"><span data-i18n="preview.volume">Объём</span><span data-i18n="preview.24h">24h%</span><span data-i18n="preview.name">Имя</span></div>
-                                <div class="tp-row active"><span class="tp-star">★</span><span>BTC</span><span>97,234</span><span class="tp-up">+2.1%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>ETH</span><span>3,421</span><span class="tp-down">−1.4%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>SOL</span><span>218</span><span class="tp-up">+5.2%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>BNB</span><span>612</span><span class="tp-down">−0.8%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>XRP</span><span>2.41</span><span class="tp-up">+1.1%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>DOGE</span><span>0.38</span><span class="tp-down">−0.5%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>ADA</span><span>0.52</span><span class="tp-up">+3.2%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>AVAX</span><span>35.2</span><span class="tp-down">−1.1%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>LINK</span><span>14.8</span><span class="tp-up">+4.0%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>DOT</span><span>7.12</span><span class="tp-down">−0.3%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>MATIC</span><span>0.89</span><span class="tp-up">+2.8%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>LTC</span><span>98.5</span><span class="tp-up">+1.5%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>TRX</span><span>0.14</span><span class="tp-up">+0.7%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>TON</span><span>2.31</span><span class="tp-down">−0.9%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>SHIB</span><span>0.00002</span><span class="tp-up">+3.6%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>UNI</span><span>7.84</span><span class="tp-up">+1.2%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>APT</span><span>9.12</span><span class="tp-down">−1.0%</span></div>
-                                <div class="tp-row"><span class="tp-star">☆</span><span>ATOM</span><span>11.6</span><span class="tp-up">+0.8%</span></div>
+                                <div class="tp-sidebar-head"><span data-i18n="preview.volume">РћР±СЉС‘Рј</span><span data-i18n="preview.24h">24h%</span><span data-i18n="preview.name">РРјСЏ</span></div>
+                                <div class="tp-row active"><span class="tp-star">в…</span><span>BTC</span><span>97,234</span><span class="tp-up">+2.1%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>ETH</span><span>3,421</span><span class="tp-down">в€’1.4%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>SOL</span><span>218</span><span class="tp-up">+5.2%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>BNB</span><span>612</span><span class="tp-down">в€’0.8%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>XRP</span><span>2.41</span><span class="tp-up">+1.1%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>DOGE</span><span>0.38</span><span class="tp-down">в€’0.5%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>ADA</span><span>0.52</span><span class="tp-up">+3.2%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>AVAX</span><span>35.2</span><span class="tp-down">в€’1.1%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>LINK</span><span>14.8</span><span class="tp-up">+4.0%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>DOT</span><span>7.12</span><span class="tp-down">в€’0.3%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>MATIC</span><span>0.89</span><span class="tp-up">+2.8%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>LTC</span><span>98.5</span><span class="tp-up">+1.5%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>TRX</span><span>0.14</span><span class="tp-up">+0.7%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>TON</span><span>2.31</span><span class="tp-down">в€’0.9%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>SHIB</span><span>0.00002</span><span class="tp-up">+3.6%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>UNI</span><span>7.84</span><span class="tp-up">+1.2%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>APT</span><span>9.12</span><span class="tp-down">в€’1.0%</span></div>
+                                <div class="tp-row"><span class="tp-star">в†</span><span>ATOM</span><span>11.6</span><span class="tp-up">+0.8%</span></div>
                             </div>
                             <div class="tp-chart">
-                                <span class="tp-chart-label">BTCUSDT · 15m</span>
+                                <span class="tp-chart-label">BTCUSDT В· 15m</span>
                                 <div class="tp-chart-svg-wrap">
                                     <svg class="tp-chart-svg" viewBox="0 0 320 140" preserveAspectRatio="none">
                                         <defs>
@@ -150,7 +150,7 @@
                                                     <feMergeNode in="SourceGraphic"/>
                                                 </feMerge>
                                             </filter>
-                                            <!-- Moving mask: gradient rect slides L→R, black=hidden tail, white=visible head -->
+                                            <!-- Moving mask: gradient rect slides Lв†’R, black=hidden tail, white=visible head -->
                                             <linearGradient id="tp-comet-mask-grad" gradientUnits="objectBoundingBox" x1="0" y1="0" x2="1" y2="0">
                                                 <stop offset="0%"   stop-color="black"/>
                                                 <stop offset="45%"  stop-color="#444"/>
@@ -175,47 +175,47 @@
                                 </div>
                             </div>
                             <div class="tp-ai">
-                                <div class="tp-ai-head-wrap"><span class="tp-ai-head">AI Analysis</span><span class="tp-ai-rocket" aria-hidden="true">🚀</span></div>
+                                <div class="tp-ai-head-wrap"><span class="tp-ai-head">AI Analysis</span><span class="tp-ai-rocket" aria-hidden="true">рџљЂ</span></div>
                                 <div class="tp-ai-symbol">BTC / USDT</div>
-                                <div class="tp-ai-direction tp-ai-up"><span class="tp-arrow">↑</span> <span data-i18n="preview.directionUp">Рост</span></div>
-                                <div class="tp-ai-confidence"><span data-i18n="preview.confidenceLabel">Уверенность</span>: <strong>72%</strong> · RSI: <strong>58</strong></div>
+                                <div class="tp-ai-direction tp-ai-up"><span class="tp-arrow">в†‘</span> <span data-i18n="preview.directionUp">Р РѕСЃС‚</span></div>
+                                <div class="tp-ai-confidence"><span data-i18n="preview.confidenceLabel">РЈРІРµСЂРµРЅРЅРѕСЃС‚СЊ</span>: <strong>72%</strong> В· RSI: <strong>58</strong></div>
                                 <div class="tp-ai-hz">
-                                    <span class="hz-up">15м ↑</span><span class="hz-up">1ч ↑</span><span class="hz-side">4ч →</span>
-                                    <span class="hz-up">1д ↑</span><span class="hz-down">1нед ↓</span>
+                                    <span class="hz-up">15Рј в†‘</span><span class="hz-up">1С‡ в†‘</span><span class="hz-side">4С‡ в†’</span>
+                                    <span class="hz-up">1Рґ в†‘</span><span class="hz-down">1РЅРµРґ в†“</span>
                                 </div>
                                 <div class="tp-ai-longterm">
-                                    <div class="tp-longterm-title" data-i18n="preview.longtermTitle">Долгосрочный прогноз</div>
+                                    <div class="tp-longterm-title" data-i18n="preview.longtermTitle">Р”РѕР»РіРѕСЃСЂРѕС‡РЅС‹Р№ РїСЂРѕРіРЅРѕР·</div>
                                     <div class="tp-longterm-grid">
                                         <div class="tp-longterm-item tp-lt-up">
-                                            <span class="tp-lt-label">4ч</span>
-                                            <span class="tp-lt-arrow">↑</span>
+                                            <span class="tp-lt-label">4С‡</span>
+                                            <span class="tp-lt-arrow">в†‘</span>
                                             <span class="tp-lt-pct">90%</span>
                                             <span class="tp-lt-rsi">RSI 62</span>
                                         </div>
                                         <div class="tp-longterm-item tp-lt-up">
-                                            <span class="tp-lt-label">1д</span>
-                                            <span class="tp-lt-arrow">↑</span>
+                                            <span class="tp-lt-label">1Рґ</span>
+                                            <span class="tp-lt-arrow">в†‘</span>
                                             <span class="tp-lt-pct">61%</span>
                                             <span class="tp-lt-rsi">RSI 59</span>
                                         </div>
                                         <div class="tp-longterm-item tp-lt-down">
-                                            <span class="tp-lt-label">1нед</span>
-                                            <span class="tp-lt-arrow">↓</span>
+                                            <span class="tp-lt-label">1РЅРµРґ</span>
+                                            <span class="tp-lt-arrow">в†“</span>
                                             <span class="tp-lt-pct">61%</span>
                                             <span class="tp-lt-rsi">RSI 37</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="tp-ai-indicators">
-                                    <span class="ind up">EMA</span><span class="ind up">P/EMA</span><span class="ind side" data-i18n="preview.candles">Свечи</span>
+                                    <span class="ind up">EMA</span><span class="ind up">P/EMA</span><span class="ind side" data-i18n="preview.candles">РЎРІРµС‡Рё</span>
                                 </div>
-                                <div class="tp-ai-text" data-i18n="preview.forecastText">Краткосрочный прогноз: продолжение роста. Поддержка удержится, отскок к сопротивлению. RSI 58 — умеренный восходящий импульс.</div>
+                                <div class="tp-ai-text" data-i18n="preview.forecastText">РљСЂР°С‚РєРѕСЃСЂРѕС‡РЅС‹Р№ РїСЂРѕРіРЅРѕР·: РїСЂРѕРґРѕР»Р¶РµРЅРёРµ СЂРѕСЃС‚Р°. РџРѕРґРґРµСЂР¶РєР° СѓРґРµСЂР¶РёС‚СЃСЏ, РѕС‚СЃРєРѕРє Рє СЃРѕРїСЂРѕС‚РёРІР»РµРЅРёСЋ. RSI 58 вЂ” СѓРјРµСЂРµРЅРЅС‹Р№ РІРѕСЃС…РѕРґСЏС‰РёР№ РёРјРїСѓР»СЊСЃ.</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <p class="preview-cta-hint"><span data-i18n="preview.ctaHintBefore">Откройте </span><a href="app.html?demo=1" data-i18n="footer.demo">демо</a><span data-i18n="preview.ctaHintAfter"> и попробуйте интерфейс за 5 минут.</span></p>
+            <p class="preview-cta-hint"><span data-i18n="preview.ctaHintBefore">РћС‚РєСЂРѕР№С‚Рµ </span><a href="app.html?demo=1" data-i18n="footer.demo">РґРµРјРѕ</a><span data-i18n="preview.ctaHintAfter"> Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РёРЅС‚РµСЂС„РµР№СЃ Р·Р° 5 РјРёРЅСѓС‚.</span></p>
         </section>
 
         <!-- Powered by TradingView -->
@@ -232,163 +232,163 @@
 
         <!-- How it works -->
         <section class="landing-section landing-how" id="how">
-            <p class="section-label" data-i18n="how.label">Как начать</p>
-            <h2 class="section-title" data-i18n="how.title">Четыре шага до первого сигнала</h2>
+            <p class="section-label" data-i18n="how.label">РљР°Рє РЅР°С‡Р°С‚СЊ</p>
+            <h2 class="section-title" data-i18n="how.title">Р§РµС‚С‹СЂРµ С€Р°РіР° РґРѕ РїРµСЂРІРѕРіРѕ СЃРёРіРЅР°Р»Р°</h2>
             <div class="steps">
                 <div class="step">
                     <span class="step-num">01</span>
-                    <h3 class="step-title" data-i18n="how.step1Title">Демо</h3>
-                    <p class="step-desc" data-i18n="how.step1Desc">Запустите терминал на 5 минут без регистрации и оцените интерфейс и AI-анализ.</p>
+                    <h3 class="step-title" data-i18n="how.step1Title">Р”РµРјРѕ</h3>
+                    <p class="step-desc" data-i18n="how.step1Desc">Р—Р°РїСѓСЃС‚РёС‚Рµ С‚РµСЂРјРёРЅР°Р» РЅР° 5 РјРёРЅСѓС‚ Р±РµР· СЂРµРіРёСЃС‚СЂР°С†РёРё Рё РѕС†РµРЅРёС‚Рµ РёРЅС‚РµСЂС„РµР№СЃ Рё AI-Р°РЅР°Р»РёР·.</p>
                 </div>
                 <div class="step">
                     <span class="step-num">02</span>
-                    <h3 class="step-title" data-i18n="how.step2Title">Вход</h3>
-                    <p class="step-desc" data-i18n="how.step2Desc">Войдите по email или через Google, Facebook, X — один аккаунт на всех устройствах.</p>
+                    <h3 class="step-title" data-i18n="how.step2Title">Р’С…РѕРґ</h3>
+                    <p class="step-desc" data-i18n="how.step2Desc">Р’РѕР№РґРёС‚Рµ РїРѕ email РёР»Рё С‡РµСЂРµР· Google, Facebook, X вЂ” РѕРґРёРЅ Р°РєРєР°СѓРЅС‚ РЅР° РІСЃРµС… СѓСЃС‚СЂРѕР№СЃС‚РІР°С….</p>
                 </div>
                 <div class="step">
                     <span class="step-num">03</span>
-                    <h3 class="step-title" data-i18n="how.step3Title">Оплата</h3>
-                    <p class="step-desc" data-i18n="how.step3Desc">Lifetime: $49 один раз. Оплата криптой (USDT, TON) — доступ навсегда.</p>
+                    <h3 class="step-title" data-i18n="how.step3Title">РћРїР»Р°С‚Р°</h3>
+                    <p class="step-desc" data-i18n="how.step3Desc">Lifetime: $49 РѕРґРёРЅ СЂР°Р·. РћРїР»Р°С‚Р° РєСЂРёРїС‚РѕР№ (USDT, TON) вЂ” РґРѕСЃС‚СѓРї РЅР°РІСЃРµРіРґР°.</p>
                 </div>
                 <div class="step">
                     <span class="step-num">04</span>
-                    <h3 class="step-title" data-i18n="how.step4Title">Терминал</h3>
-                    <p class="step-desc" data-i18n="how.step4Desc">Полный доступ: графики, AI-прогноз по горизонтам, эмулятор и история сделок.</p>
+                    <h3 class="step-title" data-i18n="how.step4Title">РўРµСЂРјРёРЅР°Р»</h3>
+                    <p class="step-desc" data-i18n="how.step4Desc">РџРѕР»РЅС‹Р№ РґРѕСЃС‚СѓРї: РіСЂР°С„РёРєРё, AI-РїСЂРѕРіРЅРѕР· РїРѕ РіРѕСЂРёР·РѕРЅС‚Р°Рј, СЌРјСѓР»СЏС‚РѕСЂ Рё РёСЃС‚РѕСЂРёСЏ СЃРґРµР»РѕРє.</p>
                 </div>
             </div>
         </section>
 
-        <!-- Slogan strip (на всю ширину, над метриками) -->
+        <!-- Slogan strip (РЅР° РІСЃСЋ С€РёСЂРёРЅСѓ, РЅР°Рґ РјРµС‚СЂРёРєР°РјРё) -->
         <section class="slogan-strip slogan-strip-full" id="slogan-banner">
-            <p class="slogan-strip-text"><span data-i18n="slogan.before">Один интерфейс. </span><span class="slogan-strip-accent" data-i18n="slogan.accent">AI-прогноз</span><span data-i18n="slogan.after"> и полный контроль.</span></p>
+            <p class="slogan-strip-text"><span data-i18n="slogan.before">РћРґРёРЅ РёРЅС‚РµСЂС„РµР№СЃ. </span><span class="slogan-strip-accent" data-i18n="slogan.accent">AI-РїСЂРѕРіРЅРѕР·</span><span data-i18n="slogan.after"> Рё РїРѕР»РЅС‹Р№ РєРѕРЅС‚СЂРѕР»СЊ.</span></p>
         </section>
 
-        <!-- Все нужные метрики -->
+        <!-- Р’СЃРµ РЅСѓР¶РЅС‹Рµ РјРµС‚СЂРёРєРё -->
         <section class="landing-section landing-metrics" id="metrics">
-            <p class="section-label" data-i18n="metrics.label">Метрики</p>
-            <h2 class="section-title" data-i18n="metrics.title">Все нужные метрики в одном месте</h2>
+            <p class="section-label" data-i18n="metrics.label">РњРµС‚СЂРёРєРё</p>
+            <h2 class="section-title" data-i18n="metrics.title">Р’СЃРµ РЅСѓР¶РЅС‹Рµ РјРµС‚СЂРёРєРё РІ РѕРґРЅРѕРј РјРµСЃС‚Рµ</h2>
             <div class="metrics-cards">
                 <article class="metrics-card">
                     <div class="metrics-card-icon metrics-icon-chart">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                     </div>
-                    <h3 data-i18n="metrics.card1Title">Анализ RSI и Моментума</h3>
-                    <p data-i18n="metrics.card1Desc">Моментальный расчёт перекупленности и перепроданности. ИИ вычисляет импульс движения за последние 5 свечей.</p>
+                    <h3 data-i18n="metrics.card1Title">РђРЅР°Р»РёР· RSI Рё РњРѕРјРµРЅС‚СѓРјР°</h3>
+                    <p data-i18n="metrics.card1Desc">РњРѕРјРµРЅС‚Р°Р»СЊРЅС‹Р№ СЂР°СЃС‡С‘С‚ РїРµСЂРµРєСѓРїР»РµРЅРЅРѕСЃС‚Рё Рё РїРµСЂРµРїСЂРѕРґР°РЅРЅРѕСЃС‚Рё. РР РІС‹С‡РёСЃР»СЏРµС‚ РёРјРїСѓР»СЊСЃ РґРІРёР¶РµРЅРёСЏ Р·Р° РїРѕСЃР»РµРґРЅРёРµ 5 СЃРІРµС‡РµР№.</p>
                 </article>
                 <article class="metrics-card">
                     <div class="metrics-card-icon metrics-icon-bolt">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                     </div>
-                    <h3 data-i18n="metrics.card2Title">Zero-Lag Скользящие</h3>
-                    <p data-i18n="metrics.card2Desc">Анализ пересечения краткосрочных и долгосрочных SMA/EMA без задержек. Чёткий контекст рынка.</p>
+                    <h3 data-i18n="metrics.card2Title">Zero-Lag РЎРєРѕР»СЊР·СЏС‰РёРµ</h3>
+                    <p data-i18n="metrics.card2Desc">РђРЅР°Р»РёР· РїРµСЂРµСЃРµС‡РµРЅРёСЏ РєСЂР°С‚РєРѕСЃСЂРѕС‡РЅС‹С… Рё РґРѕР»РіРѕСЃСЂРѕС‡РЅС‹С… SMA/EMA Р±РµР· Р·Р°РґРµСЂР¶РµРє. Р§С‘С‚РєРёР№ РєРѕРЅС‚РµРєСЃС‚ СЂС‹РЅРєР°.</p>
                 </article>
                 <article class="metrics-card">
                     <div class="metrics-card-icon metrics-icon-target">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
                     </div>
-                    <h3 data-i18n="metrics.card3Title">Уверенность ИИ (%)</h3>
-                    <p data-i18n="metrics.card3Desc">Нейросеть агрегирует все факторы в единый процент уверенности: Спад, Рост или Боковик.</p>
+                    <h3 data-i18n="metrics.card3Title">РЈРІРµСЂРµРЅРЅРѕСЃС‚СЊ РР (%)</h3>
+                    <p data-i18n="metrics.card3Desc">РќРµР№СЂРѕСЃРµС‚СЊ Р°РіСЂРµРіРёСЂСѓРµС‚ РІСЃРµ С„Р°РєС‚РѕСЂС‹ РІ РµРґРёРЅС‹Р№ РїСЂРѕС†РµРЅС‚ СѓРІРµСЂРµРЅРЅРѕСЃС‚Рё: РЎРїР°Рґ, Р РѕСЃС‚ РёР»Рё Р‘РѕРєРѕРІРёРє.</p>
                 </article>
             </div>
         </section>
 
         <!-- Features -->
         <section class="landing-section landing-features" id="features">
-            <p class="section-label" data-i18n="features.label">Возможности</p>
-            <h2 class="section-title" data-i18n="features.title">Всё, что нужно для анализа и практики</h2>
+            <p class="section-label" data-i18n="features.label">Р’РѕР·РјРѕР¶РЅРѕСЃС‚Рё</p>
+            <h2 class="section-title" data-i18n="features.title">Р’СЃС‘, С‡С‚Рѕ РЅСѓР¶РЅРѕ РґР»СЏ Р°РЅР°Р»РёР·Р° Рё РїСЂР°РєС‚РёРєРё</h2>
             <div class="features-grid">
                 <article class="feature-card">
                     <div class="feature-icon-wrap">
                         <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
                     </div>
-                    <h3 data-i18n="features.f1Title">Мультитаймфрейм</h3>
-                    <p data-i18n="features.f1Desc">4 графика в одном окне: 4H, 1H, 15M, 5M. Контекст старших ТФ и детализация младших без переключения.</p>
+                    <h3 data-i18n="features.f1Title">РњСѓР»СЊС‚РёС‚Р°Р№РјС„СЂРµР№Рј</h3>
+                    <p data-i18n="features.f1Desc">4 РіСЂР°С„РёРєР° РІ РѕРґРЅРѕРј РѕРєРЅРµ: 4H, 1H, 15M, 5M. РљРѕРЅС‚РµРєСЃС‚ СЃС‚Р°СЂС€РёС… РўР¤ Рё РґРµС‚Р°Р»РёР·Р°С†РёСЏ РјР»Р°РґС€РёС… Р±РµР· РїРµСЂРµРєР»СЋС‡РµРЅРёСЏ.</p>
                 </article>
                 <article class="feature-card">
                     <div class="feature-icon-wrap">
                         <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
                     </div>
-                    <h3 data-i18n="features.f2Title">Прогноз по времени</h3>
-                    <p data-i18n="features.f2Desc">Краткосрочные горизонты от 1 минуты до 1 часа и долгосрочные 4ч, 1д, 1нед с процентом уверенности.</p>
+                    <h3 data-i18n="features.f2Title">РџСЂРѕРіРЅРѕР· РїРѕ РІСЂРµРјРµРЅРё</h3>
+                    <p data-i18n="features.f2Desc">РљСЂР°С‚РєРѕСЃСЂРѕС‡РЅС‹Рµ РіРѕСЂРёР·РѕРЅС‚С‹ РѕС‚ 1 РјРёРЅСѓС‚С‹ РґРѕ 1 С‡Р°СЃР° Рё РґРѕР»РіРѕСЃСЂРѕС‡РЅС‹Рµ 4С‡, 1Рґ, 1РЅРµРґ СЃ РїСЂРѕС†РµРЅС‚РѕРј СѓРІРµСЂРµРЅРЅРѕСЃС‚Рё.</p>
                 </article>
                 <article class="feature-card">
                     <div class="feature-icon-wrap">
                         <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                     </div>
-                    <h3 data-i18n="features.f3Title">Раннее предупреждение</h3>
-                    <p data-i18n="features.f3Desc">Сигналы смены тренда до разворота. Оценка вероятности и причины — RSI-дивергенция, сужение Bollinger Bands.</p>
+                    <h3 data-i18n="features.f3Title">Р Р°РЅРЅРµРµ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ</h3>
+                    <p data-i18n="features.f3Desc">РЎРёРіРЅР°Р»С‹ СЃРјРµРЅС‹ С‚СЂРµРЅРґР° РґРѕ СЂР°Р·РІРѕСЂРѕС‚Р°. РћС†РµРЅРєР° РІРµСЂРѕСЏС‚РЅРѕСЃС‚Рё Рё РїСЂРёС‡РёРЅС‹ вЂ” RSI-РґРёРІРµСЂРіРµРЅС†РёСЏ, СЃСѓР¶РµРЅРёРµ Bollinger Bands.</p>
                 </article>
                 <article class="feature-card">
                     <div class="feature-icon-wrap">
                         <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                     </div>
-                    <h3 data-i18n="features.f4Title">Демо-счёт и TP/SL</h3>
-                    <p data-i18n="features.f4Desc">Эмулятор с плечом до 100x, маржа и комиссия 0.04%. Тейк-профит и стоп-лосс с автоматическим срабатыванием.</p>
+                    <h3 data-i18n="features.f4Title">Р”РµРјРѕ-СЃС‡С‘С‚ Рё TP/SL</h3>
+                    <p data-i18n="features.f4Desc">Р­РјСѓР»СЏС‚РѕСЂ СЃ РїР»РµС‡РѕРј РґРѕ 100x, РјР°СЂР¶Р° Рё РєРѕРјРёСЃСЃРёСЏ 0.04%. РўРµР№Рє-РїСЂРѕС„РёС‚ Рё СЃС‚РѕРї-Р»РѕСЃСЃ СЃ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРёРј СЃСЂР°Р±Р°С‚С‹РІР°РЅРёРµРј.</p>
                 </article>
                 <article class="feature-card">
                     <div class="feature-icon-wrap">
                         <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                     </div>
-                    <h3 data-i18n="features.f5Title">Криптовалюты в одном месте</h3>
-                    <p data-i18n="features.f5Desc">Список монет по объёму и 24h%. Графики TradingView и AI-анализ для крипто.</p>
+                    <h3 data-i18n="features.f5Title">РљСЂРёРїС‚РѕРІР°Р»СЋС‚С‹ РІ РѕРґРЅРѕРј РјРµСЃС‚Рµ</h3>
+                    <p data-i18n="features.f5Desc">РЎРїРёСЃРѕРє РјРѕРЅРµС‚ РїРѕ РѕР±СЉС‘РјСѓ Рё 24h%. Р“СЂР°С„РёРєРё TradingView Рё AI-Р°РЅР°Р»РёР· РґР»СЏ РєСЂРёРїС‚Рѕ.</p>
                 </article>
                 <article class="feature-card">
                     <div class="feature-icon-wrap">
                         <svg class="feature-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                     </div>
-                    <h3 data-i18n="features.f6Title">Рекомендации по входам</h3>
-                    <p data-i18n="features.f6Desc">Сценарии лонг/шорт с уровнями входа, стопа и тейков. Учёт индикаторов, ADX и дивергенций.</p>
+                    <h3 data-i18n="features.f6Title">Р РµРєРѕРјРµРЅРґР°С†РёРё РїРѕ РІС…РѕРґР°Рј</h3>
+                    <p data-i18n="features.f6Desc">РЎС†РµРЅР°СЂРёРё Р»РѕРЅРі/С€РѕСЂС‚ СЃ СѓСЂРѕРІРЅСЏРјРё РІС…РѕРґР°, СЃС‚РѕРїР° Рё С‚РµР№РєРѕРІ. РЈС‡С‘С‚ РёРЅРґРёРєР°С‚РѕСЂРѕРІ, ADX Рё РґРёРІРµСЂРіРµРЅС†РёР№.</p>
                 </article>
             </div>
         </section>
 
         <!-- Product: one interface -->
         <section class="landing-section landing-product">
-            <p class="section-label" data-i18n="product.label">Продукт</p>
-            <h2 class="section-title" data-i18n="product.title">Один терминал вместо нескольких окон</h2>
+            <p class="section-label" data-i18n="product.label">РџСЂРѕРґСѓРєС‚</p>
+            <h2 class="section-title" data-i18n="product.title">РћРґРёРЅ С‚РµСЂРјРёРЅР°Р» РІРјРµСЃС‚Рѕ РЅРµСЃРєРѕР»СЊРєРёС… РѕРєРѕРЅ</h2>
             <div class="product-blocks">
                 <div class="product-block">
                     <span class="product-block-num">1</span>
-                    <h3 data-i18n="product.b1Title">Графики</h3>
-                    <p data-i18n="product.b1Desc">Список инструментов, поиск, сортировка по объёму и 24h%. Один или четыре таймфрейма на экране. RSI на графике.</p>
+                    <h3 data-i18n="product.b1Title">Р“СЂР°С„РёРєРё</h3>
+                    <p data-i18n="product.b1Desc">РЎРїРёСЃРѕРє РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ, РїРѕРёСЃРє, СЃРѕСЂС‚РёСЂРѕРІРєР° РїРѕ РѕР±СЉС‘РјСѓ Рё 24h%. РћРґРёРЅ РёР»Рё С‡РµС‚С‹СЂРµ С‚Р°Р№РјС„СЂРµР№РјР° РЅР° СЌРєСЂР°РЅРµ. RSI РЅР° РіСЂР°С„РёРєРµ.</p>
                 </div>
                 <div class="product-block">
                     <span class="product-block-num">2</span>
-                    <h3 data-i18n="product.b2Title">AI-панель</h3>
-                    <p data-i18n="product.b2Desc">Направление и сила сигнала, RSI, горизонты, долгосрочный прогноз, индикаторы и текстовый разбор с уровнями.</p>
+                    <h3 data-i18n="product.b2Title">AI-РїР°РЅРµР»СЊ</h3>
+                    <p data-i18n="product.b2Desc">РќР°РїСЂР°РІР»РµРЅРёРµ Рё СЃРёР»Р° СЃРёРіРЅР°Р»Р°, RSI, РіРѕСЂРёР·РѕРЅС‚С‹, РґРѕР»РіРѕСЃСЂРѕС‡РЅС‹Р№ РїСЂРѕРіРЅРѕР·, РёРЅРґРёРєР°С‚РѕСЂС‹ Рё С‚РµРєСЃС‚РѕРІС‹Р№ СЂР°Р·Р±РѕСЂ СЃ СѓСЂРѕРІРЅСЏРјРё.</p>
                 </div>
                 <div class="product-block">
                     <span class="product-block-num">3</span>
-                    <h3 data-i18n="product.b3Title">Эмулятор</h3>
-                    <p data-i18n="product.b3Desc">Открытие лонг/шорт, плечо, маржа, TP/SL. Баланс $10k, история позиций и закрытие по кнопке или по срабатыванию ордеров.</p>
+                    <h3 data-i18n="product.b3Title">Р­РјСѓР»СЏС‚РѕСЂ</h3>
+                    <p data-i18n="product.b3Desc">РћС‚РєСЂС‹С‚РёРµ Р»РѕРЅРі/С€РѕСЂС‚, РїР»РµС‡Рѕ, РјР°СЂР¶Р°, TP/SL. Р‘Р°Р»Р°РЅСЃ $10k, РёСЃС‚РѕСЂРёСЏ РїРѕР·РёС†РёР№ Рё Р·Р°РєСЂС‹С‚РёРµ РїРѕ РєРЅРѕРїРєРµ РёР»Рё РїРѕ СЃСЂР°Р±Р°С‚С‹РІР°РЅРёСЋ РѕСЂРґРµСЂРѕРІ.</p>
                 </div>
             </div>
         </section>
 
         <!-- Pricing: Lifetime -->
         <section class="landing-section landing-pricing" id="pricing" style="display:none">
-            <p class="section-label" data-i18n="pricing.label">Тариф</p>
-            <h2 class="section-title" data-i18n="pricing.title">Доступ навсегда</h2>
+            <p class="section-label" data-i18n="pricing.label">РўР°СЂРёС„</p>
+            <h2 class="section-title" data-i18n="pricing.title">Р”РѕСЃС‚СѓРї РЅР°РІСЃРµРіРґР°</h2>
             <div class="pricing-lifetime-wrap">
                 <div class="pricing-lifetime-card">
                     <div class="pricing-lifetime-shimmer" aria-hidden="true"></div>
                     <div class="pricing-lifetime-card-inner">
                         <h3 class="pricing-lifetime-title" data-i18n="pricing.cardTitle">Lifetime License</h3>
-                        <p class="pricing-lifetime-price"><span class="pricing-currency">$</span>49<span class="pricing-lifetime-forever" data-i18n="pricing.forever">/ навсегда</span></p>
+                        <p class="pricing-lifetime-price"><span class="pricing-currency">$</span>49<span class="pricing-lifetime-forever" data-i18n="pricing.forever">/ РЅР°РІСЃРµРіРґР°</span></p>
                         <ul class="pricing-lifetime-list">
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li1">Полный доступ к терминалу в браузере</span></li>
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li2">Мгновенный анализ 141+ монет</span></li>
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li3">Бесплатные обновления алгоритма</span></li>
-                            <li><span class="pricing-check"></span><span data-i18n="pricing.li4">Поддержка в Telegram</span></li>
+                            <li><span class="pricing-check"></span><span data-i18n="pricing.li1">РџРѕР»РЅС‹Р№ РґРѕСЃС‚СѓРї Рє С‚РµСЂРјРёРЅР°Р»Сѓ РІ Р±СЂР°СѓР·РµСЂРµ</span></li>
+                            <li><span class="pricing-check"></span><span data-i18n="pricing.li2">РњРіРЅРѕРІРµРЅРЅС‹Р№ Р°РЅР°Р»РёР· 141+ РјРѕРЅРµС‚</span></li>
+                            <li><span class="pricing-check"></span><span data-i18n="pricing.li3">Р‘РµСЃРїР»Р°С‚РЅС‹Рµ РѕР±РЅРѕРІР»РµРЅРёСЏ Р°Р»РіРѕСЂРёС‚РјР°</span></li>
+                            <li><span class="pricing-check"></span><span data-i18n="pricing.li4">РџРѕРґРґРµСЂР¶РєР° РІ Telegram</span></li>
                         </ul>
                         <button type="button" class="landing-btn landing-btn-primary landing-btn-block landing-btn-crypto" id="btn-pricing-lifetime" data-i18n="pricing.payBtn">
-                            Оплатить Crypto
+                            РћРїР»Р°С‚РёС‚СЊ Crypto
                         </button>
-                        <p class="pricing-lifetime-methods" data-i18n="pricing.methods">Поддерживаем USDT (TRC20, BEP20), TON</p>
+                        <p class="pricing-lifetime-methods" data-i18n="pricing.methods">РџРѕРґРґРµСЂР¶РёРІР°РµРј USDT (TRC20, BEP20), TON</p>
                     </div>
                 </div>
             </div>
-            <p class="pricing-note"><span data-i18n="pricing.noteBefore">Сначала попробуйте </span><a href="app.html?demo=1" data-i18n="cta.demoBtn">демо 5 минут</a><span data-i18n="pricing.noteAfter"> без регистрации.</span></p>
+            <p class="pricing-note"><span data-i18n="pricing.noteBefore">РЎРЅР°С‡Р°Р»Р° РїРѕРїСЂРѕР±СѓР№С‚Рµ </span><a href="app.html?demo=1" data-i18n="cta.demoBtn">РґРµРјРѕ 5 РјРёРЅСѓС‚</a><span data-i18n="pricing.noteAfter"> Р±РµР· СЂРµРіРёСЃС‚СЂР°С†РёРё.</span></p>
         </section>
 
         <!-- Final CTA -->
@@ -397,11 +397,11 @@
                 <div class="hero-glow"></div>
                 <div class="hero-grid"></div>
             </div>
-            <h2 class="section-title cta-section-title" data-i18n="cta.title">Готовы попробовать?</h2>
-            <p class="landing-subtitle cta-section-sub" data-i18n="cta.subtitle">Запустите демо или войдите в аккаунт и откройте полный терминал.</p>
+            <h2 class="section-title cta-section-title" data-i18n="cta.title">Р“РѕС‚РѕРІС‹ РїРѕРїСЂРѕР±РѕРІР°С‚СЊ?</h2>
+            <p class="landing-subtitle cta-section-sub" data-i18n="cta.subtitle">Р—Р°РїСѓСЃС‚РёС‚Рµ РґРµРјРѕ РёР»Рё РІРѕР№РґРёС‚Рµ РІ Р°РєРєР°СѓРЅС‚ Рё РѕС‚РєСЂРѕР№С‚Рµ РїРѕР»РЅС‹Р№ С‚РµСЂРјРёРЅР°Р».</p>
             <div class="landing-cta">
-                <a href="app.html?demo=1" class="landing-btn landing-btn-demo" data-i18n="cta.demoBtn">Демо 5 минут</a>
-                <button type="button" class="landing-btn landing-btn-primary" id="btn-open-terminal-2" data-i18n="cta.enterBtn">Войти в Терминал</button>
+                <a href="app.html?demo=1" class="landing-btn landing-btn-demo" data-i18n="cta.demoBtn">Р”РµРјРѕ 5 РјРёРЅСѓС‚</a>
+                <button type="button" class="landing-btn landing-btn-primary" id="btn-open-terminal-2" data-i18n="cta.enterBtn">Р’РѕР№С‚Рё РІ РўРµСЂРјРёРЅР°Р»</button>
             </div>
         </section>
     </main>
@@ -410,41 +410,41 @@
         <div class="footer-inner">
             <a href="index.html" class="landing-logo">FuturesTerminal</a>
             <div class="footer-links">
-                <a href="app.html" data-i18n="footer.terminal">Терминал</a>
-                <a href="app.html?demo=1" data-i18n="footer.demo">Демо</a>
+                <a href="app.html" data-i18n="footer.terminal">РўРµСЂРјРёРЅР°Р»</a>
+                <a href="app.html?demo=1" data-i18n="footer.demo">Р”РµРјРѕ</a>
             </div>
-            <p class="footer-copy" data-i18n="footer.copy">© FuturesTerminal. Торговля сопряжена с рисками.</p>
+            <p class="footer-copy" data-i18n="footer.copy">В© FuturesTerminal. РўРѕСЂРіРѕРІР»СЏ СЃРѕРїСЂСЏР¶РµРЅР° СЃ СЂРёСЃРєР°РјРё.</p>
         </div>
     </footer>
 
-    <!-- Модалка входа -->
+    <!-- РњРѕРґР°Р»РєР° РІС…РѕРґР° -->
     <div class="modal-overlay" id="auth-modal-overlay">
         <div class="modal auth-modal" id="auth-modal">
-            <button type="button" class="modal-close" id="auth-close" aria-label="Закрыть" data-i18n-aria="auth.closeAria">✕</button>
-            <h2 class="modal-title" data-i18n="auth.modalTitle">Вход в Терминал</h2>
-            <p class="modal-subtitle" data-i18n="auth.modalSubtitle">Войдите, чтобы оформить подписку и получить полный доступ.</p>
+            <button type="button" class="modal-close" id="auth-close" aria-label="Р—Р°РєСЂС‹С‚СЊ" data-i18n-aria="auth.closeAria">вњ•</button>
+            <h2 class="modal-title" data-i18n="auth.modalTitle">Р’С…РѕРґ РІ РўРµСЂРјРёРЅР°Р»</h2>
+            <p class="modal-subtitle" data-i18n="auth.modalSubtitle">Р’РѕР№РґРёС‚Рµ, С‡С‚РѕР±С‹ РѕС„РѕСЂРјРёС‚СЊ РїРѕРґРїРёСЃРєСѓ Рё РїРѕР»СѓС‡РёС‚СЊ РїРѕР»РЅС‹Р№ РґРѕСЃС‚СѓРї.</p>
 
             <div class="auth-tabs" id="auth-tabs">
-                <button type="button" class="auth-tab active" id="auth-tab-login" data-i18n="auth.tabLogin">Вход</button>
-                <button type="button" class="auth-tab" id="auth-tab-register" data-i18n="auth.tabRegister">Регистрация</button>
+                <button type="button" class="auth-tab active" id="auth-tab-login" data-i18n="auth.tabLogin">Р’С…РѕРґ</button>
+                <button type="button" class="auth-tab" id="auth-tab-register" data-i18n="auth.tabRegister">Р РµРіРёСЃС‚СЂР°С†РёСЏ</button>
             </div>
 
             <form class="auth-form" id="auth-form">
                 <label class="input-label" data-i18n="auth.emailLabel">Email</label>
                 <input type="email" class="input-field" id="auth-email" placeholder="your@email.com" data-i18n-placeholder="auth.emailPlaceholder" required autocomplete="email">
 
-                <label class="input-label" data-i18n="auth.passwordLabel">Пароль</label>
-                <input type="password" class="input-field" id="auth-password" placeholder="••••••••" data-i18n-placeholder="auth.passwordPlaceholder" autocomplete="current-password">
+                <label class="input-label" data-i18n="auth.passwordLabel">РџР°СЂРѕР»СЊ</label>
+                <input type="password" class="input-field" id="auth-password" placeholder="вЂўвЂўвЂўвЂўвЂўвЂўвЂўвЂў" data-i18n-placeholder="auth.passwordPlaceholder" autocomplete="current-password">
 
                 <button type="submit" class="landing-btn landing-btn-primary landing-btn-block" id="auth-submit" data-i18n="auth.submitBtn">
-                    Войти по email
+                    Р’РѕР№С‚Рё РїРѕ email
                 </button>
 
                 <div class="auth-error" id="auth-error" role="alert" aria-live="polite" style="display:none"></div>
             </form>
 
             <div class="auth-divider">
-                <span data-i18n="auth.divider">или войти через</span>
+                <span data-i18n="auth.divider">РёР»Рё РІРѕР№С‚Рё С‡РµСЂРµР·</span>
             </div>
 
             <div class="auth-social">
@@ -454,40 +454,40 @@
                 </button>
             </div>
 
-            <p class="auth-footer-note" data-i18n="auth.footerNote">Регистрируясь, вы соглашаетесь с условиями использования.</p>
+            <p class="auth-footer-note" data-i18n="auth.footerNote">Р РµРіРёСЃС‚СЂРёСЂСѓСЏСЃСЊ, РІС‹ СЃРѕРіР»Р°С€Р°РµС‚РµСЃСЊ СЃ СѓСЃР»РѕРІРёСЏРјРё РёСЃРїРѕР»СЊР·РѕРІР°РЅРёСЏ.</p>
         </div>
     </div>
 
-    <!-- Модалка оплаты (Lifetime) -->
+    <!-- РњРѕРґР°Р»РєР° РѕРїР»Р°С‚С‹ (Lifetime) -->
     <div class="modal-overlay" id="payment-modal-overlay">
         <div class="modal payment-modal payment-modal-lifetime" id="payment-modal">
-            <button type="button" class="modal-close" id="payment-close" aria-label="Закрыть" data-i18n-aria="auth.closeAria">✕</button>
+            <button type="button" class="modal-close" id="payment-close" aria-label="Р—Р°РєСЂС‹С‚СЊ" data-i18n-aria="auth.closeAria">вњ•</button>
             <h2 class="modal-title" data-i18n="payment.modalTitle">Lifetime License</h2>
-            <p class="modal-subtitle" data-i18n="payment.modalSubtitle">$49 — доступ к терминалу навсегда.</p>
+            <p class="modal-subtitle" data-i18n="payment.modalSubtitle">$49 вЂ” РґРѕСЃС‚СѓРї Рє С‚РµСЂРјРёРЅР°Р»Сѓ РЅР°РІСЃРµРіРґР°.</p>
 
             <ul class="payment-lifetime-list">
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li1">Полный доступ к терминалу в браузере</span></li>
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li2">Мгновенный анализ 141+ монет</span></li>
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li3">Бесплатные обновления алгоритма</span></li>
-                <li><span class="pricing-check"></span><span data-i18n="pricing.li4">Поддержка в Telegram</span></li>
+                <li><span class="pricing-check"></span><span data-i18n="pricing.li1">РџРѕР»РЅС‹Р№ РґРѕСЃС‚СѓРї Рє С‚РµСЂРјРёРЅР°Р»Сѓ РІ Р±СЂР°СѓР·РµСЂРµ</span></li>
+                <li><span class="pricing-check"></span><span data-i18n="pricing.li2">РњРіРЅРѕРІРµРЅРЅС‹Р№ Р°РЅР°Р»РёР· 141+ РјРѕРЅРµС‚</span></li>
+                <li><span class="pricing-check"></span><span data-i18n="pricing.li3">Р‘РµСЃРїР»Р°С‚РЅС‹Рµ РѕР±РЅРѕРІР»РµРЅРёСЏ Р°Р»РіРѕСЂРёС‚РјР°</span></li>
+                <li><span class="pricing-check"></span><span data-i18n="pricing.li4">РџРѕРґРґРµСЂР¶РєР° РІ Telegram</span></li>
             </ul>
 
             <button type="button" class="landing-btn landing-btn-primary landing-btn-block landing-btn-crypto" id="payment-submit" data-i18n="payment.payBtn">
-                Оплатить Crypto
+                РћРїР»Р°С‚РёС‚СЊ Crypto
             </button>
-            <p class="payment-note" data-i18n="payment.note">Поддерживаем USDT (TRC20, BEP20), TON</p>
+            <p class="payment-note" data-i18n="payment.note">РџРѕРґРґРµСЂР¶РёРІР°РµРј USDT (TRC20, BEP20), TON</p>
         </div>
     </div>
 
-    <!-- Сообщение после истечения демо -->
+    <!-- РЎРѕРѕР±С‰РµРЅРёРµ РїРѕСЃР»Рµ РёСЃС‚РµС‡РµРЅРёСЏ РґРµРјРѕ -->
     <div class="demo-expired-toast" id="demo-expired-toast" style="display:none">
-        <span data-i18n="demoExpired.text">Демо-доступ закончился. Войдите и оплатите подписку для полного доступа.</span>
-        <button type="button" class="toast-close" id="demo-expired-close">✕</button>
+        <span data-i18n="demoExpired.text">Р”РµРјРѕ-РґРѕСЃС‚СѓРї Р·Р°РєРѕРЅС‡РёР»СЃСЏ. Р’РѕР№РґРёС‚Рµ Рё РѕРїР»Р°С‚РёС‚Рµ РїРѕРґРїРёСЃРєСѓ РґР»СЏ РїРѕР»РЅРѕРіРѕ РґРѕСЃС‚СѓРїР°.</span>
+        <button type="button" class="toast-close" id="demo-expired-close">вњ•</button>
     </div>
 
     <!-- Owner shield first, then landing -->
-    <script src="owner-config.js?v=20260726-ft3"></script>
-    <script src="shield.js?v=20260726-ft3"></script>
+    <script src="owner-config.js?v=20260726-ft4"></script>
+    <script src="shield.js?v=20260726-ft4"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
