@@ -2698,7 +2698,7 @@
         else setAppLang(getAppLang());
     }
 
-    // Sync language across open tabs/windows (terminal <-> landing)
+    // Sync language across open tabs/windows
     window.addEventListener('storage', function (e) {
         if (!e || e.key !== LANG_STORAGE) return;
         var next = e.newValue || 'ru';

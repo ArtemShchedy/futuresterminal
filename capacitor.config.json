@@ -4,7 +4,7 @@
   "webDir": "www",
   "server": {
     "androidScheme": "https",
-    "allowNavigation": ["https://fapi.binance.com", "https://s3.tradingview.com", "https://fonts.googleapis.com"]
+    "allowNavigation": ["https://fapi.binance.com", "https://s3.tradingview.com"]
   },
   "android": {
     "allowMixedContent": true
