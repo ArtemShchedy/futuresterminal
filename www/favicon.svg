@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="FuturesTerminal">
+  <defs>
+    <linearGradient id="bg" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#14161c"/>
+      <stop offset="100%" stop-color="#0B0B0F"/>
+    </linearGradient>
+    <linearGradient id="w" x1="16" y1="5" x2="16" y2="27" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6EFFB0"/>
+      <stop offset="55%" stop-color="#00E676"/>
+      <stop offset="100%" stop-color="#00B85A"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="8" y1="4" x2="24" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Modern dark tile -->
+  <rect width="32" height="32" fill="url(#bg)"/>
+  <!-- Soft ambient light -->
+  <circle cx="11" cy="10" r="14" fill="#00E676" opacity="0.08"/>
+  <!-- Contemporary W — even stroke, open geometry -->
+  <path
+    fill="url(#w)"
+    d="M6.4 8h3.35l1.95 11.05L16 8.6l4.3 10.45L22.25 8H25.6l-4.05 16H18.2L16 13.55 13.8 24H10.45L6.4 8z"
+  />
+  <!-- Glass highlight -->
+  <rect width="32" height="32" fill="url(#shine)"/>
+</svg>

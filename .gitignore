@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+.env
+.env.*
+!.env.example
+dist/
+.idea/
+.vscode/
+*.local
+android/
+.capacitor/
+ios/
+.agent/
+_obfuscate.html

@@ -1,0 +1,12 @@
+{
+  "appId": "app.futuresterminal.terminal",
+  "appName": "FuturesTerminal",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": ["https://fapi.binance.com", "https://s3.tradingview.com", "https://fonts.googleapis.com"]
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "futuresterminal-app",
+  "version": "1.0.0",
+  "description": "FuturesTerminal — AI Trading Dashboard",
+  "scripts": {
+    "build": "echo Build step - copy files to www if needed",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}
