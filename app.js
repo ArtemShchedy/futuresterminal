@@ -105,141 +105,22 @@
         return (lang === 'ru') ? 'ru' : 'en';
     }
 
-    // === ACCESS (Firebase) ===
-    // Site is free — full terminal access for everyone (no paywall / buy button)
-    var SITE_FREE = true;
-    var accessState = { ready: false, isPaid: true, demoCreditsLeft: 3, uid: null, user: null, _inited: false };
-
-    function ensureUserDoc(user, providerName) {
-        var wf = window.appFirebase;
-        if (!wf || !wf.db || !wf.FieldValue || !user || !user.uid) return Promise.resolve();
-
-        var ref = wf.db.collection('users').doc(user.uid);
-        var serverTs = wf.FieldValue.serverTimestamp();
-        var increment = wf.FieldValue.increment(1);
-
-        return ref.get().then(function (snap) {
-            if (snap.exists) {
-                return ref.set({
-                    email: user.email || null,
-                    authProvider: providerName || snap.data().authProvider,
-                    lastSignInAt: serverTs,
-                    signInCount: increment
-                }, { merge: true });
-            }
-            return ref.set({
-                uid: user.uid,
-                email: user.email || null,
-                authProvider: providerName || 'auto',
-                createdAt: serverTs,
-                lastSignInAt: serverTs,
-                signInCount: 1,
-                purchased: false,
-                purchasedAt: null,
-                demoCreditsLeft: 3
-            }, { merge: true });
-        }).catch(function () { });
-    }
-
-    function initFirebaseAccess() {
-        var wf = window.appFirebase;
-        // Auth backend off — unlock terminal immediately (no black/gated wait)
-        if (wf && wf.enabled === false) {
-            accessState.ready = true;
-            accessState.isPaid = SITE_FREE ? true : false;
-            releaseAppBootLock();
-            return;
-        }
-        if (!wf || !wf.auth || !wf.db || !wf.FieldValue) {
-            if (!initFirebaseAccess._retries) initFirebaseAccess._retries = 0;
-            initFirebaseAccess._retries++;
-            if (initFirebaseAccess._retries > 80) {
-                accessState.ready = true;
-                accessState.isPaid = SITE_FREE ? true : false;
-                releaseAppBootLock();
-                return;
-            }
-            setTimeout(initFirebaseAccess, 50);
-            return;
-        }
-        if (accessState._inited) return;
-        accessState._inited = true;
-
-        wf.auth.onAuthStateChanged(function (user) {
-            accessState.user = user || null;
-            accessState.uid = user ? user.uid : null;
-            accessState.ready = false;
-
-            if (!user) {
-                accessState.isPaid = SITE_FREE ? true : false;
-                accessState.demoCreditsLeft = getGuestDemoCreditsLeft();
-                accessState.ready = true;
-                if (userMenuVisible) updateUserMenuState();
-                return;
-            }
-
-            ensureUserDoc(user, 'auto').then(function () {
-                return wf.db.collection('users').doc(user.uid).get();
-            }).then(function (doc) {
-                accessState.isPaid = SITE_FREE ? true : !!(doc.exists && doc.data() && doc.data().purchased === true);
-                accessState.demoCreditsLeft = (doc.exists && doc.data() && typeof doc.data().demoCreditsLeft === 'number') ? doc.data().demoCreditsLeft : 3;
-                accessState.ready = true;
-                if (userMenuVisible) updateUserMenuState();
-            }).catch(function () {
-                accessState.isPaid = SITE_FREE ? true : false;
-                accessState.demoCreditsLeft = 3;
-                accessState.ready = true;
-                if (userMenuVisible) updateUserMenuState();
-            });
-        });
-    }
-
-    function waitAccessReady(timeoutMs) {
-        timeoutMs = timeoutMs || 8000;
-        return new Promise(function (resolve) {
-            if (accessState.ready) return resolve();
-
-            var start = Date.now();
-            var t = setInterval(function () {
-                if (accessState.ready) {
-                    clearInterval(t);
-                    resolve();
-                } else if (Date.now() - start > timeoutMs) {
-                    clearInterval(t);
-                    resolve();
-                }
-            }, 50);
-        });
-    }
+    // === ACCESS (free local terminal — no auth / payment backend) ===
+    var accessState = { ready: true, isPaid: true, demoCreditsLeft: 999, uid: null, user: null };
 
     function hasDemoParam() {
         try { return window.location.search.match(/[?&]demo=1/); } catch (e) { return false; }
     }
 
-    function getGuestDemoCreditsLeft() {
-        try {
-            var raw = localStorage.getItem('ft_guest_demo_credits_left');
-            var n = raw == null ? 3 : parseInt(raw, 10);
-            if (isNaN(n)) return 3;
-            return Math.max(0, n);
-        } catch (e) { return 3; }
-    }
-
-    function releaseAppBootLock() {
-        try { document.documentElement.classList.remove('app-boot-pending'); } catch (e) {}
-    }
-
     function enforceAccessGateWhenReady() {
-        return waitAccessReady(9000).then(function () {
-            if (hasDemoParam()) {
-                try {
-                    var cleanUrl = new URL(window.location.href);
-                    cleanUrl.searchParams.delete('demo');
-                    window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
-                } catch (e) {}
-            }
-            return true;
-        });
+        if (hasDemoParam()) {
+            try {
+                var cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('demo');
+                window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
+            } catch (e) {}
+        }
+        return Promise.resolve(true);
     }
 
     // === EMULATOR STATE ===
@@ -2683,11 +2564,8 @@
     }
 
     function init() {
-        // Show UI immediately — Firebase runs in background
-        releaseAppBootLock();
         accessState.ready = true;
-        accessState.demoCreditsLeft = getGuestDemoCreditsLeft();
-        initFirebaseAccess();
+        accessState.isPaid = true;
         startAppCore();
     }
 
@@ -3342,43 +3220,19 @@
     }
 
     function updateUserMenuState() {
-        var paid = SITE_FREE || !!accessState.isPaid;
         var elPaid = document.getElementById('user-menu-paid');
-        var elUnpaid = document.getElementById('user-menu-unpaid');
-        if (elPaid) elPaid.style.display = paid ? 'block' : 'none';
-        if (elUnpaid) elUnpaid.style.display = paid ? 'none' : 'block';
-
-        // Header subtitle: show Google name or email under "Аккаунт"
+        if (elPaid) elPaid.style.display = 'block';
         var sub = document.getElementById('user-menu-subtitle');
         if (sub) {
-            var u = accessState.user;
-            var txt = '';
-            if (u) {
-                if (u.displayName && String(u.displayName).trim()) txt = String(u.displayName).trim();
-                else if (u.email && String(u.email).trim()) txt = String(u.email).trim();
-            }
-            sub.textContent = txt;
-            sub.style.display = txt ? 'block' : 'none';
+            sub.textContent = '';
+            sub.style.display = 'none';
         }
     }
 
     function initUserMenu() {
-        var buyBtn = document.getElementById('user-menu-buy');
-        var downloadGuest = document.getElementById('user-menu-download-guest');
         var downloadUser = document.getElementById('user-menu-download');
-        if (buyBtn) buyBtn.addEventListener('click', function () {
-            var lang = currentAppLang || getAppLang();
-            window.location.href = buildIndexUrl(lang, 'index.html#pricing');
-            toggleUserMenu();
-        });
-        if (downloadGuest) downloadGuest.addEventListener('click', function (e) {
-            e.preventDefault();
-            window.location.href = buildIndexUrl(currentAppLang || getAppLang(), 'index.html');
-            toggleUserMenu();
-        });
         if (downloadUser) downloadUser.addEventListener('click', function (e) {
             e.preventDefault();
-            window.location.href = buildIndexUrl(currentAppLang || getAppLang(), 'index.html');
             toggleUserMenu();
         });
     }

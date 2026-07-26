@@ -14,23 +14,7 @@
     <link rel="apple-touch-icon" href="favicon.svg?v=20260726-ft1">
     <link rel="preconnect" href="https://fapi.binance.com" crossorigin>
     <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="app.css?v=20260726-ft1">
-    <!-- Optional webfonts — system fonts already work on old phones -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    </noscript>
-    <script>
-    (function () {
-        try { document.documentElement.classList.add('app-boot-pending'); } catch (e) {}
-        setTimeout(function () {
-            try { document.documentElement.classList.remove('app-boot-pending'); } catch (e) {}
-        }, 1200);
-    })();
-    </script>
+    <link rel="stylesheet" href="app.css?v=20260726-ft7">
 </head>
 
 <body class="capacitor-app">
@@ -80,14 +64,7 @@
         </div>
         <div class="user-menu-paid" id="user-menu-paid">
             <p class="user-menu-status"><svg class="user-menu-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span data-i18n="account.lifetimeActive">Бесплатный полный доступ</span></p>
-            <a href="index.html" class="user-menu-item user-menu-item-logout"><svg class="user-menu-item-icon user-menu-icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span data-i18n="account.logout">Выйти</span></a>
             <a href="#" class="user-menu-item user-menu-download" id="user-menu-download"><svg class="user-menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg><span data-i18n="account.downloadApp">Скачать мобильное приложение</span></a>
-        </div>
-        <div class="user-menu-unpaid" id="user-menu-unpaid" style="display:none">
-            <p class="user-menu-status"><svg class="user-menu-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span data-i18n="account.fullAccess">Полный доступ к терминалу</span></p>
-            <button type="button" class="user-menu-btn-buy" id="user-menu-buy"><svg class="user-menu-btn-buy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><span class="user-menu-btn-buy-text" data-i18n="account.buy">Купить</span></button>
-            <a href="index.html" class="user-menu-item user-menu-item-logout"><svg class="user-menu-item-icon user-menu-icon-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span data-i18n="account.exitHome">Выйти на главную</span></a>
-            <a href="#" class="user-menu-item user-menu-download" id="user-menu-download-guest"><svg class="user-menu-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg><span data-i18n="account.downloadApp">Скачать мобильное приложение</span></a>
         </div>
     </div>
 
@@ -413,16 +390,11 @@
         </div>
     </div>
 
-    <!-- Owner shield first, then app -->
-    <script src="owner-config.js?v=20260726-ft6"></script>
-    <script src="shield.js?v=20260726-ft6"></script>
-    <script src="ai-engine.js?v=20260726-ft6"></script>
+    <script src="owner-config.js?v=20260726-ft7"></script>
+    <script src="shield.js?v=20260726-ft7"></script>
+    <script src="ai-engine.js?v=20260726-ft7"></script>
     <script src="https://s3.tradingview.com/tv.js"></script>
-    <script src="app.js?v=20260726-ft6"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
-    <script src="firebase-init.js?v=20260726-ft6" defer></script>
+    <script src="app.js?v=20260726-ft7"></script>
 </body>
 
 </html>

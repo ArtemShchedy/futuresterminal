@@ -49,45 +49,6 @@ body {
     touch-action: manipulation;
 }
 
-.app-boot-pending body{
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-/* === DEMO TIMER BANNER (app.html) === */
-.demo-timer-banner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 8px 16px;
-    background: linear-gradient(90deg, rgba(0, 230, 118, 0.15), rgba(0, 230, 118, 0.05));
-    border-bottom: 1px solid rgba(0, 230, 118, 0.25);
-    font-size: 0.85rem;
-    font-family: var(--font-mono);
-    color: var(--text-main);
-}
-.demo-timer-label { color: var(--text-muted); }
-.demo-timer-value {
-    font-weight: 700;
-    color: var(--primary);
-    min-width: 3ch;
-}
-.demo-timer-exit {
-    margin-left: 8px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.78rem;
-    transition: all 0.2s;
-}
-.demo-timer-exit:hover {
-    background: rgba(255, 51, 102, 0.15);
-    color: var(--accent);
-}
-
 .topbar-logo {
     text-decoration: none;
     color: inherit;
@@ -539,8 +500,7 @@ a.topbar-logo:hover { opacity: 0.9; }
     text-overflow: ellipsis;
 }
 
-.user-menu-paid,
-.user-menu-unpaid {
+.user-menu-paid {
     padding: 12px 0;
 }
 
@@ -591,45 +551,12 @@ a.topbar-logo:hover { opacity: 0.9; }
 .user-menu-item-logout:hover .user-menu-icon-exit {
     color: var(--accent);
 }
-.user-menu-btn-buy {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    width: calc(100% - 32px);
-    margin: 0 16px 12px;
-    padding: 12px 16px;
-    background: rgba(0, 230, 118, 0.2);
-    border: 1px solid rgba(0, 230, 118, 0.4);
-    border-radius: 10px;
-    color: var(--primary);
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: var(--font-sans);
-}
-.user-menu-btn-buy-icon {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-}
-.user-menu-btn-buy-text {
-    display: inline-block;
-    line-height: 1;
-}
-
 .user-menu-item:hover {
     background: rgba(255, 255, 255, 0.06);
 }
 
 .user-menu-download {
     color: var(--primary);
-}
-
-.user-menu-btn-buy:hover {
-    background: rgba(0, 230, 118, 0.3);
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
 }
 
 /* === MAIN LAYOUT === */

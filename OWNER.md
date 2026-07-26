@@ -1,29 +1,20 @@
 # FuturesTerminal — Owner protection
 
-This project is a private product: **FuturesTerminal**.
+Private product: **FuturesTerminal**.
 
-## What is protected
+## Protection
 
-1. **Encrypted owner config** — `www/owner-config.js` stores XOR+Base64 ciphertexts only (`window.__FT_OWN_ENC__`). `shield.js` decrypts them at runtime.
-2. **Host lock** — site refuses foreign domains (`h` field → allowed hosts CSV).
-3. **Optional IP lock** — set encrypted `i` (IPs CSV) and `f` flag `1|1` (`enforceHost|enforceIp`).
-4. **Anti-tamper shield** — DevTools shortcuts, UI copy, injected third-party scripts.
-5. **Owner stamp** — decrypted token marks this build as yours.
+- Encrypted owner payload in `owner-config.js` (decoded by `shield.js`)
+- Host lock for foreign domains (localhost / LAN / `*.github.io` allowed)
+- Light anti-tamper (context menu + script filter)
 
-## Defaults after restore
+## Runtime connections (required)
 
-- Hosts allowed: `localhost`, `127.0.0.1` (+ LAN / `file:` / Capacitor always allowed)
-- IP lock: off
-- Scripts wired in `app.html` and `index.html` before app code
+- Binance Futures public API — market data
+- TradingView widget — chart
 
-## Before publishing on your domain
+No payment backend, Firebase, or landing page.
 
-Add your domain into the encrypted hosts list (re-encode CSV with the same key used in `shield.js`), then redeploy `owner-config.js` + `shield.js`.
+## Limits
 
-## Important limits (honest)
-
-- Browser JS **cannot** be fully encrypted against a skilled attacker.
-- Shield / host / IP locks stop casual copying and foreign hosting — not a substitute for:
-  - private Git repository,
-  - BitLocker / EFS for the project folder,
-  - server-side access control (Cloudflare / nginx allowlist).
+Browser JS cannot be fully locked. Use a private git repo and BitLocker for the project folder.
