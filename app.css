@@ -76,8 +76,10 @@ a.topbar-logo:hover { opacity: 0.9; }
     cursor: pointer;
 }
 
+.topbar-logo .logo-com,
 .topbar-logo span {
-    color: var(--primary);
+    color: #00E676;
+    font-weight: 700;
 }
 
 .topbar-tabs {
