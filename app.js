@@ -471,17 +471,19 @@
         { id: '3', labelKey: 'chart.styleArea', fallback: 'Область' }
     ];
 
-    // All indicators run INSIDE TradingView so they pan/zoom with the main chart
+    // TV studies (inside widget, pan with chart). OI is custom — TV embed has no reliable OI study.
+    var OI_STUDY_ID = 'ft-open-interest';
     var CHART_INDICATORS = [
         { id: 'RSI@tv-basicstudies', label: 'RSI' },
         { id: 'MACD@tv-basicstudies', label: 'MACD' },
         { id: 'Stochastic@tv-basicstudies', label: 'Stochastic' },
-        { id: 'Open_Interest', label: 'Open Interest (OI)' },
+        { id: OI_STUDY_ID, label: 'Open Interest (OI)', custom: true },
         { id: 'BB@tv-basicstudies', label: 'Bollinger Bands' },
         { id: 'MAExp@tv-basicstudies', label: 'EMA' },
         { id: 'MASimple@tv-basicstudies', label: 'SMA' },
         { id: 'VWAP@tv-basicstudies', label: 'VWAP' }
     ];
+    var oiPaneState = { points: [], loading: false, timer: null, lastKey: '' };
 
     var TF_CATALOG = [
         {
@@ -614,21 +616,39 @@
         } catch (e) {
             currentChartStudies = [];
         }
-        // Migrate old custom external panes → TV studies (synced with chart pan/zoom)
+        // Normalize legacy ids (never keep Open_Interest for TV — it blanks all studies)
         var migrate = {
             'ft-rsi': 'RSI@tv-basicstudies',
             'ft-macd': 'MACD@tv-basicstudies',
             'ft-stoch': 'Stochastic@tv-basicstudies',
-            'ft-open-interest': 'Open_Interest',
-            'OpenInterest@tv-basicstudies': 'Open_Interest',
-            'Open Interest@tv-basicstudies': 'Open_Interest'
+            'Open_Interest': OI_STUDY_ID,
+            'OpenInterest@tv-basicstudies': OI_STUDY_ID,
+            'Open Interest@tv-basicstudies': OI_STUDY_ID
         };
+        var allowed = {};
+        for (var a = 0; a < CHART_INDICATORS.length; a++) allowed[CHART_INDICATORS[a].id] = true;
         currentChartStudies = currentChartStudies.map(function (id) {
             return migrate[id] || id;
-        }).filter(function (id, i, arr) { return arr.indexOf(id) === i; });
+        }).filter(function (id, i, arr) {
+            return allowed[id] && arr.indexOf(id) === i;
+        });
+        saveChartStudies();
     }
 
-    function updateIndicatorPanes() { /* indicators live inside TradingView now */ }
+    function getTvStudiesOnly() {
+        // Only known TV study ids — never pass OI / ft-* / Open_Interest
+        var out = [];
+        for (var i = 0; i < CHART_INDICATORS.length; i++) {
+            var ind = CHART_INDICATORS[i];
+            if (ind.custom) continue;
+            if (currentChartStudies.indexOf(ind.id) !== -1) out.push(ind.id);
+        }
+        return out;
+    }
+
+    function isOiEnabled() {
+        return currentChartStudies.indexOf(OI_STUDY_ID) !== -1;
+    }
 
     function saveChartStudies() {
         try { localStorage.setItem(CHART_STUDIES_STORAGE, JSON.stringify(currentChartStudies)); } catch (e) {}
@@ -781,9 +801,196 @@
         if (enabled && idx === -1) currentChartStudies.push(studyId);
         if (!enabled && idx !== -1) currentChartStudies.splice(idx, 1);
         saveChartStudies();
-        // Reload TV widget so studies stay inside the chart (pan/zoom stay in sync)
+        if (studyId === OI_STUDY_ID) {
+            updateOiPane();
+            return;
+        }
         if (selectedSymbol) loadChart(selectedSymbol);
+        else updateOiPane();
     };
+
+    function oiPeriodForInterval(iv) {
+        var n = String(iv || '15');
+        if (n === '1' || n === '3' || n === '5') return '5m';
+        if (n === '15') return '15m';
+        if (n === '30') return '30m';
+        if (n === '60' || n === '120') return '1h';
+        if (n === '240') return '4h';
+        if (n === '360' || n === '480') return '6h';
+        if (n === '720') return '12h';
+        if (n === 'D' || n === '1D' || n === '1d' || n === 'W' || n === '1W') return '1d';
+        return '15m';
+    }
+
+    function formatOiValue(v) {
+        var n = Number(v);
+        if (!isFinite(n)) return '—';
+        var abs = Math.abs(n);
+        if (abs >= 1e9) return (n / 1e9).toFixed(2).replace('.', ',') + ' B';
+        if (abs >= 1e6) return (n / 1e6).toFixed(2).replace('.', ',') + ' M';
+        if (abs >= 1e3) return (n / 1e3).toFixed(2).replace('.', ',') + ' K';
+        return n.toFixed(2).replace('.', ',');
+    }
+
+    function oiMarketSymbol(sym) {
+        var s = String(sym || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!s) return '';
+        return s.slice(-4) === 'USDT' ? s : (s + 'USDT');
+    }
+
+    function parseOiHistRows(data) {
+        if (!Array.isArray(data)) return [];
+        return data.map(function (row) {
+            var v = Number(row && (row.sumOpenInterestValue != null ? row.sumOpenInterestValue : row.sumOpenInterest));
+            if (!isFinite(v) || v <= 0) v = Number(row && row.openInterest);
+            return { t: Number(row && row.timestamp) || Number(row && row.time) || 0, v: isFinite(v) ? v : 0 };
+        }).filter(function (p) { return p.v > 0; });
+    }
+
+    function setOiPaneVisible(on) {
+        var pane = document.getElementById('oi-pane');
+        var col = document.querySelector('.chart-main-col');
+        if (!pane) return;
+        pane.classList.toggle('is-visible', !!on);
+        pane.setAttribute('aria-hidden', on ? 'false' : 'true');
+        if (col) col.classList.toggle('has-oi', !!on);
+    }
+
+    function drawOiPane() {
+        var canvas = document.getElementById('oi-pane-canvas');
+        var valueEl = document.getElementById('oi-pane-value');
+        if (!canvas) return;
+        var pts = oiPaneState.points || [];
+        var dpr = window.devicePixelRatio || 1;
+        var w = canvas.clientWidth || 0;
+        var h = canvas.clientHeight || 0;
+        if (w < 2 || h < 2) return;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#0B0B0F';
+        ctx.fillRect(0, 0, w, h);
+
+        if (!pts.length) {
+            ctx.fillStyle = '#8E9BAE';
+            ctx.font = '12px sans-serif';
+            ctx.fillText(oiPaneState.loading ? 'Загрузка Open Interest…' : 'Нет данных Open Interest', 10, 28);
+            if (valueEl) valueEl.textContent = '—';
+            return;
+        }
+
+        var min = pts[0].v, max = pts[0].v;
+        for (var i = 1; i < pts.length; i++) {
+            if (pts[i].v < min) min = pts[i].v;
+            if (pts[i].v > max) max = pts[i].v;
+        }
+        var padAmt = (max - min) * 0.08 || 1;
+        min -= padAmt; max += padAmt;
+        if (max <= min) max = min + 1;
+        var padX = 4, padY = 8, rightPad = 54;
+        var plotW = Math.max(1, w - padX - rightPad);
+        var plotH = Math.max(1, h - padY * 2);
+        function yOf(v) { return padY + plotH - ((v - min) / (max - min)) * plotH; }
+
+        // RSI-like band fill under the line
+        ctx.beginPath();
+        for (var j = 0; j < pts.length; j++) {
+            var x = padX + (plotW * j) / Math.max(1, pts.length - 1);
+            var y = yOf(pts[j].v);
+            if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.lineTo(padX + plotW, padY + plotH);
+        ctx.lineTo(padX, padY + plotH);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(171, 71, 188, 0.16)';
+        ctx.fill();
+
+        ctx.beginPath();
+        for (var k = 0; k < pts.length; k++) {
+            var x2 = padX + (plotW * k) / Math.max(1, pts.length - 1);
+            var y2 = yOf(pts[k].v);
+            if (k === 0) ctx.moveTo(x2, y2); else ctx.lineTo(x2, y2);
+        }
+        ctx.strokeStyle = '#AB47BC';
+        ctx.lineWidth = 1.7;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        var last = pts[pts.length - 1].v;
+        if (valueEl) valueEl.textContent = formatOiValue(last);
+        var label = formatOiValue(last);
+        ctx.font = '11px sans-serif';
+        var tw = ctx.measureText(label).width + 10;
+        var ly = yOf(last);
+        var bx = w - tw - 4;
+        var by = Math.max(2, Math.min(h - 18, ly - 8));
+        ctx.fillStyle = '#AB47BC';
+        ctx.fillRect(bx, by, tw, 16);
+        ctx.fillStyle = '#0B0B0F';
+        ctx.fillText(label, bx + 5, by + 12);
+    }
+
+    function updateOiPane() {
+        var enabled = isOiEnabled() && !multiTFMode;
+        setOiPaneVisible(enabled);
+        if (!enabled) {
+            oiPaneState.points = [];
+            oiPaneState.lastKey = '';
+            return;
+        }
+        if (!selectedSymbol) {
+            oiPaneState.points = [];
+            drawOiPane();
+            return;
+        }
+        var market = oiMarketSymbol(selectedSymbol);
+        var period = oiPeriodForInterval(currentChartInterval);
+        var key = market + '|' + period;
+        if (!market) { oiPaneState.points = []; drawOiPane(); return; }
+        if (oiPaneState.loading && oiPaneState.lastKey === key) return;
+        oiPaneState.loading = true;
+        oiPaneState.lastKey = key;
+        drawOiPane();
+
+        var histUrl = 'https://fapi.binance.com/futures/data/openInterestHist?symbol=' +
+            encodeURIComponent(market) + '&period=' + encodeURIComponent(period) + '&limit=150';
+        fetch(histUrl)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!isOiEnabled() || oiPaneState.lastKey !== key) return null;
+                var pts = parseOiHistRows(data);
+                if (pts.length) {
+                    oiPaneState.loading = false;
+                    oiPaneState.points = pts;
+                    drawOiPane();
+                    return null;
+                }
+                return fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=' + encodeURIComponent(market))
+                    .then(function (r2) { return r2.json(); });
+            })
+            .then(function (now) {
+                if (now == null) return;
+                oiPaneState.loading = false;
+                if (!isOiEnabled() || oiPaneState.lastKey !== key) return;
+                var v = Number(now.openInterest);
+                var t = Number(now.time) || Date.now();
+                oiPaneState.points = (isFinite(v) && v > 0)
+                    ? [{ t: t - 180000, v: v }, { t: t - 90000, v: v }, { t: t, v: v }]
+                    : [];
+                drawOiPane();
+            })
+            .catch(function () {
+                oiPaneState.loading = false;
+                if (oiPaneState.lastKey !== key) return;
+                oiPaneState.points = [];
+                drawOiPane();
+            });
+    }
+
+    function updateIndicatorPanes() { updateOiPane(); }
 
     function getTvChartApi() {
         if (!activeTvWidget) return null;
@@ -895,6 +1102,12 @@
         }
         initFloatingPanelDismiss();
         renderTfToolbar();
+        updateOiPane();
+        if (!oiPaneState.timer) {
+            oiPaneState.timer = setInterval(function () {
+                if (isOiEnabled()) updateOiPane();
+            }, 60000);
+        }
     }
 
     window.selectChartTimeframe = function (interval) {
@@ -997,39 +1210,25 @@
             enable_publishing: false,
             save_image: !compact,
             allow_symbol_change: false,
-            // Persist drawings/indicators inside TV iframe localStorage
-            doNotStoreSettings: false,
+            // Avoid stale TV localStorage wiping/conflicting with our studies list
+            doNotStoreSettings: true,
             client_id: 'futuresterminal',
-            user_id: getTvStorageUserId(),
+            user_id: getTvStorageUserId() + '-s' + getTvStudiesOnly().join('_').replace(/[^a-zA-Z0-9_@-]/g, '').slice(0, 80),
             details: false,
             hotlist: false,
             calendar: false,
             withdateranges: false,
-            enabled_features: compact ? [] : [
-                'use_localstorage_for_settings',
-                'save_chart_properties_to_local_storage'
-            ],
+            enabled_features: compact ? [] : [],
             disabled_features: [
                 'header_widget',
                 'header_symbol_search',
                 'header_compare',
                 'header_screenshot',
                 'header_fullscreen_button',
-                'timeframes_toolbar'
+                'timeframes_toolbar',
+                'use_localstorage_for_settings'
             ],
-            // Studies inside TV iframe → pan/zoom stay synced with the main chart
-            studies: compact ? [] : (function () {
-                var out = [];
-                for (var i = 0; i < currentChartStudies.length; i++) {
-                    var id = currentChartStudies[i];
-                    out.push(id);
-                    // OI id aliases — widget builds differ
-                    if (id === 'Open_Interest') {
-                        out.push('OpenInterest@tv-basicstudies');
-                    }
-                }
-                return out;
-            })(),
+            studies: compact ? [] : getTvStudiesOnly(),
             show_popup_button: true,
             popup_width: '1000',
             popup_height: '650',
@@ -2548,6 +2747,7 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
+                try { drawOiPane(); } catch (e2) {}
             }, 180);
         });
         window.addEventListener('orientationchange', function () {
@@ -2556,6 +2756,7 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
+                try { drawOiPane(); } catch (e2) {}
             }, 280);
         });
 
