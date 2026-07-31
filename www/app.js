@@ -471,21 +471,17 @@
         { id: '3', labelKey: 'chart.styleArea', fallback: 'Область' }
     ];
 
-    // Pane indicators render under the chart in RSI-like panels; overlays go into TradingView
+    // All indicators run INSIDE TradingView so they pan/zoom with the main chart
     var CHART_INDICATORS = [
-        { id: 'ft-rsi', label: 'RSI', pane: true, color: '#AB47BC' },
-        { id: 'ft-macd', label: 'MACD', pane: true, color: '#2962FF' },
-        { id: 'ft-stoch', label: 'Stochastic', pane: true, color: '#FF6D00' },
-        { id: 'ft-open-interest', label: 'Open Interest (OI)', pane: true, color: '#AB47BC' },
-        { id: 'BB@tv-basicstudies', label: 'Bollinger Bands', pane: false },
-        { id: 'MAExp@tv-basicstudies', label: 'EMA', pane: false },
-        { id: 'MASimple@tv-basicstudies', label: 'SMA', pane: false },
-        { id: 'VWAP@tv-basicstudies', label: 'VWAP', pane: false }
+        { id: 'RSI@tv-basicstudies', label: 'RSI' },
+        { id: 'MACD@tv-basicstudies', label: 'MACD' },
+        { id: 'Stochastic@tv-basicstudies', label: 'Stochastic' },
+        { id: 'Open_Interest', label: 'Open Interest (OI)' },
+        { id: 'BB@tv-basicstudies', label: 'Bollinger Bands' },
+        { id: 'MAExp@tv-basicstudies', label: 'EMA' },
+        { id: 'MASimple@tv-basicstudies', label: 'SMA' },
+        { id: 'VWAP@tv-basicstudies', label: 'VWAP' }
     ];
-
-    var OI_STUDY_ID = 'ft-open-interest';
-    var PANE_STUDY_IDS = { 'ft-rsi': 1, 'ft-macd': 1, 'ft-stoch': 1, 'ft-open-interest': 1 };
-    var indPaneState = { loading: false, timer: null, lastKey: '', ohlc: [], oi: [] };
 
     var TF_CATALOG = [
         {
@@ -618,29 +614,21 @@
         } catch (e) {
             currentChartStudies = [];
         }
-        // Migrate old TV study ids → custom RSI-like panes
+        // Migrate old custom external panes → TV studies (synced with chart pan/zoom)
         var migrate = {
-            'OpenInterest@tv-basicstudies': 'ft-open-interest',
-            'Open_Interest': 'ft-open-interest',
-            'Open Interest@tv-basicstudies': 'ft-open-interest',
-            'RSI@tv-basicstudies': 'ft-rsi',
-            'MACD@tv-basicstudies': 'ft-macd',
-            'Stochastic@tv-basicstudies': 'ft-stoch'
+            'ft-rsi': 'RSI@tv-basicstudies',
+            'ft-macd': 'MACD@tv-basicstudies',
+            'ft-stoch': 'Stochastic@tv-basicstudies',
+            'ft-open-interest': 'Open_Interest',
+            'OpenInterest@tv-basicstudies': 'Open_Interest',
+            'Open Interest@tv-basicstudies': 'Open_Interest'
         };
         currentChartStudies = currentChartStudies.map(function (id) {
             return migrate[id] || id;
         }).filter(function (id, i, arr) { return arr.indexOf(id) === i; });
     }
 
-    function isPaneStudy(id) {
-        return !!PANE_STUDY_IDS[id];
-    }
-
-    function getEnabledPaneStudies() {
-        return CHART_INDICATORS.filter(function (ind) {
-            return ind.pane && currentChartStudies.indexOf(ind.id) !== -1;
-        });
-    }
+    function updateIndicatorPanes() { /* indicators live inside TradingView now */ }
 
     function saveChartStudies() {
         try { localStorage.setItem(CHART_STUDIES_STORAGE, JSON.stringify(currentChartStudies)); } catch (e) {}
@@ -793,404 +781,9 @@
         if (enabled && idx === -1) currentChartStudies.push(studyId);
         if (!enabled && idx !== -1) currentChartStudies.splice(idx, 1);
         saveChartStudies();
-        if (isPaneStudy(studyId)) {
-            updateIndicatorPanes();
-            return;
-        }
+        // Reload TV widget so studies stay inside the chart (pan/zoom stay in sync)
         if (selectedSymbol) loadChart(selectedSymbol);
     };
-
-    function oiPeriodForInterval(iv) {
-        var n = String(iv || '15');
-        if (n === '1' || n === '3' || n === '5') return '5m';
-        if (n === '15') return '15m';
-        if (n === '30') return '30m';
-        if (n === '60' || n === '120') return '1h';
-        if (n === '240') return '4h';
-        if (n === '360' || n === '480') return '6h';
-        if (n === '720') return '12h';
-        if (n === 'D' || n === '1D' || n === '1d' || n === 'W' || n === '1W') return '1d';
-        return '15m';
-    }
-
-    function formatOiValue(v) {
-        var n = Number(v);
-        if (!isFinite(n)) return '—';
-        var abs = Math.abs(n);
-        if (abs >= 1e9) return (n / 1e9).toFixed(2).replace('.', ',') + ' B';
-        if (abs >= 1e6) return (n / 1e6).toFixed(2).replace('.', ',') + ' M';
-        if (abs >= 1e3) return (n / 1e3).toFixed(2).replace('.', ',') + ' K';
-        return n.toFixed(2).replace('.', ',');
-    }
-
-    function oiMarketSymbol(sym) {
-        var s = String(sym || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-        if (!s) return '';
-        if (s.slice(-4) === 'USDT') return s;
-        return s + 'USDT';
-    }
-
-    function parseOiHistRows(data) {
-        if (!Array.isArray(data)) return [];
-        return data.map(function (row) {
-            var v = Number(row && (row.sumOpenInterestValue != null ? row.sumOpenInterestValue : row.sumOpenInterest));
-            if (!isFinite(v) || v <= 0) v = Number(row && row.openInterest);
-            return {
-                t: Number(row && row.timestamp) || Number(row && row.time) || 0,
-                v: isFinite(v) ? v : 0
-            };
-        }).filter(function (p) { return p.v > 0; });
-    }
-
-    function ensureIndPaneDom(studies) {
-        var host = document.getElementById('ind-panes');
-        var col = document.querySelector('.chart-main-col');
-        if (!host) return;
-        host.innerHTML = '';
-        if (col) col.classList.toggle('has-ind-panes', studies.length > 0);
-        for (var i = 0; i < studies.length; i++) {
-            var ind = studies[i];
-            var pane = document.createElement('div');
-            pane.className = 'ind-pane';
-            pane.id = 'ind-pane-' + ind.id;
-            pane.innerHTML =
-                '<div class="ind-pane-legend">' +
-                    '<span class="ind-pane-name">' + ind.label + '</span>' +
-                    '<span class="ind-pane-val" id="ind-val-' + ind.id + '" style="color:' + ind.color + '">—</span>' +
-                '</div>' +
-                '<canvas class="ind-pane-canvas" id="ind-canvas-' + ind.id + '"></canvas>';
-            host.appendChild(pane);
-        }
-    }
-
-    function canvasCtx(canvas) {
-        if (!canvas) return null;
-        var dpr = window.devicePixelRatio || 1;
-        var w = canvas.clientWidth || 0;
-        var h = canvas.clientHeight || 0;
-        if (w < 2 || h < 2) return null;
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        var ctx = canvas.getContext('2d');
-        if (!ctx) return null;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        return { ctx: ctx, w: w, h: h };
-    }
-
-    function drawRsiLikeLine(ctx, w, h, series, color, fixedMin, fixedMax, bandLow, bandHigh) {
-        ctx.fillStyle = '#0B0B0F';
-        ctx.fillRect(0, 0, w, h);
-        if (!series || !series.length) {
-            ctx.fillStyle = '#8E9BAE';
-            ctx.font = '12px sans-serif';
-            ctx.fillText('Нет данных', 10, 28);
-            return null;
-        }
-        var min = fixedMin != null ? fixedMin : series[0];
-        var max = fixedMax != null ? fixedMax : series[0];
-        if (fixedMin == null || fixedMax == null) {
-            for (var i = 1; i < series.length; i++) {
-                if (series[i] < min) min = series[i];
-                if (series[i] > max) max = series[i];
-            }
-            var pad = (max - min) * 0.08 || 1;
-            min -= pad; max += pad;
-        }
-        if (max <= min) max = min + 1;
-        var padX = 4, padY = 8, rightPad = 52;
-        var plotW = Math.max(1, w - padX - rightPad);
-        var plotH = Math.max(1, h - padY * 2);
-        function yOf(v) { return padY + plotH - ((v - min) / (max - min)) * plotH; }
-
-        // RSI-style shaded band
-        if (bandLow != null && bandHigh != null) {
-            ctx.fillStyle = 'rgba(171, 71, 188, 0.12)';
-            ctx.fillRect(padX, yOf(bandHigh), plotW, Math.max(1, yOf(bandLow) - yOf(bandHigh)));
-            ctx.strokeStyle = 'rgba(171, 71, 188, 0.35)';
-            ctx.lineWidth = 1;
-            [bandLow, bandHigh].forEach(function (lv) {
-                var yy = yOf(lv);
-                ctx.beginPath(); ctx.moveTo(padX, yy); ctx.lineTo(padX + plotW, yy); ctx.stroke();
-            });
-        }
-
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-        ctx.lineWidth = 1;
-        for (var g = 0; g < 3; g++) {
-            var gy = padY + (plotH * g) / 2;
-            ctx.beginPath(); ctx.moveTo(padX, gy); ctx.lineTo(padX + plotW, gy); ctx.stroke();
-        }
-
-        ctx.beginPath();
-        for (var j = 0; j < series.length; j++) {
-            var x = padX + (plotW * j) / Math.max(1, series.length - 1);
-            var y = yOf(series[j]);
-            if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.7;
-        ctx.lineJoin = 'round';
-        ctx.stroke();
-
-        var last = series[series.length - 1];
-        var ly = yOf(last);
-        ctx.fillStyle = color;
-        var label = (Math.abs(last) >= 1000 ? formatOiValue(last) : last.toFixed(2).replace('.', ','));
-        ctx.font = '11px sans-serif';
-        var tw = ctx.measureText(label).width + 10;
-        var bx = w - tw - 4;
-        var by = Math.max(2, Math.min(h - 18, ly - 8));
-        ctx.fillRect(bx, by, tw, 16);
-        ctx.fillStyle = '#0B0B0F';
-        ctx.fillText(label, bx + 5, by + 12);
-        return last;
-    }
-
-    function buildMacdSeries(closes) {
-        if (!window.AIEngine || !AIEngine.calcEmaArray || closes.length < 35) return null;
-        var ema12 = AIEngine.calcEmaArray(closes, 12);
-        var ema26 = AIEngine.calcEmaArray(closes, 26);
-        var macdLine = [];
-        for (var i = 0; i < closes.length; i++) {
-            if (ema12[i] == null || ema26[i] == null) macdLine.push(null);
-            else macdLine.push(ema12[i] - ema26[i]);
-        }
-        var valid = [];
-        var mapIdx = [];
-        for (var j = 0; j < macdLine.length; j++) {
-            if (macdLine[j] != null) { valid.push(macdLine[j]); mapIdx.push(j); }
-        }
-        if (valid.length < 12) return null;
-        var signalArr = AIEngine.calcEmaArray(valid, 9);
-        var hist = [];
-        var line = [];
-        var sig = [];
-        for (var k = 0; k < valid.length; k++) {
-            line.push(valid[k]);
-            sig.push(signalArr[k]);
-            hist.push(signalArr[k] != null ? valid[k] - signalArr[k] : 0);
-        }
-        return { line: line, signal: sig, hist: hist };
-    }
-
-    function buildStochSeries(ohlc) {
-        var kPeriod = 14, dPeriod = 3;
-        if (!ohlc || ohlc.length < kPeriod + dPeriod) return null;
-        var kValues = [];
-        for (var i = kPeriod - 1; i < ohlc.length; i++) {
-            var highest = -Infinity, lowest = Infinity;
-            for (var j = i - kPeriod + 1; j <= i; j++) {
-                if (ohlc[j].high > highest) highest = ohlc[j].high;
-                if (ohlc[j].low < lowest) lowest = ohlc[j].low;
-            }
-            var range = highest - lowest;
-            kValues.push(range === 0 ? 50 : ((ohlc[i].close - lowest) / range) * 100);
-        }
-        var dValues = [];
-        for (var d = dPeriod - 1; d < kValues.length; d++) {
-            var sum = 0;
-            for (var t = d - dPeriod + 1; t <= d; t++) sum += kValues[t];
-            dValues.push(sum / dPeriod);
-        }
-        return { k: kValues.slice(dPeriod - 1), d: dValues };
-    }
-
-    function drawMacdPane(ctx, w, h, macd, color) {
-        ctx.fillStyle = '#0B0B0F';
-        ctx.fillRect(0, 0, w, h);
-        if (!macd) {
-            ctx.fillStyle = '#8E9BAE';
-            ctx.font = '12px sans-serif';
-            ctx.fillText('Нет данных', 10, 28);
-            return null;
-        }
-        var vals = macd.line.concat(macd.signal).concat(macd.hist);
-        var min = Math.min.apply(null, vals);
-        var max = Math.max.apply(null, vals);
-        if (max <= min) { max = min + 1; }
-        var padX = 4, padY = 8, rightPad = 52;
-        var plotW = Math.max(1, w - padX - rightPad);
-        var plotH = Math.max(1, h - padY * 2);
-        function yOf(v) { return padY + plotH - ((v - min) / (max - min)) * plotH; }
-        var zeroY = yOf(0);
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-        ctx.beginPath(); ctx.moveTo(padX, zeroY); ctx.lineTo(padX + plotW, zeroY); ctx.stroke();
-
-        var n = macd.hist.length;
-        var barW = Math.max(1, plotW / Math.max(1, n) * 0.7);
-        for (var i = 0; i < n; i++) {
-            var x = padX + (plotW * i) / Math.max(1, n - 1);
-            var y = yOf(macd.hist[i]);
-            ctx.fillStyle = macd.hist[i] >= 0 ? 'rgba(0,230,118,0.55)' : 'rgba(255,51,102,0.55)';
-            ctx.fillRect(x - barW / 2, Math.min(y, zeroY), barW, Math.max(1, Math.abs(y - zeroY)));
-        }
-        function strokeSeries(arr, c) {
-            ctx.beginPath();
-            for (var j = 0; j < arr.length; j++) {
-                var xx = padX + (plotW * j) / Math.max(1, arr.length - 1);
-                var yy = yOf(arr[j]);
-                if (j === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
-            }
-            ctx.strokeStyle = c;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-        }
-        strokeSeries(macd.line, color);
-        strokeSeries(macd.signal, '#FF6D00');
-        var last = macd.line[macd.line.length - 1];
-        ctx.fillStyle = color;
-        var label = last.toFixed(4).replace('.', ',');
-        ctx.font = '11px sans-serif';
-        var tw = ctx.measureText(label).width + 10;
-        ctx.fillRect(w - tw - 4, Math.max(2, yOf(last) - 8), tw, 16);
-        ctx.fillStyle = '#0B0B0F';
-        ctx.fillText(label, w - tw + 1, Math.max(14, yOf(last) + 4));
-        return last;
-    }
-
-    function drawStochPane(ctx, w, h, stoch) {
-        if (!stoch) {
-            ctx.fillStyle = '#0B0B0F';
-            ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = '#8E9BAE';
-            ctx.font = '12px sans-serif';
-            ctx.fillText('Нет данных', 10, 28);
-            return null;
-        }
-        // Draw %K as main RSI-like line with band 20-80
-        var last = drawRsiLikeLine(ctx, w, h, stoch.k, '#FF6D00', 0, 100, 20, 80);
-        // Overlay %D
-        var padX = 4, padY = 8, rightPad = 52;
-        var plotW = Math.max(1, w - padX - rightPad);
-        var plotH = Math.max(1, h - padY * 2);
-        function yOf(v) { return padY + plotH - (v / 100) * plotH; }
-        ctx.beginPath();
-        for (var j = 0; j < stoch.d.length; j++) {
-            var x = padX + (plotW * j) / Math.max(1, stoch.d.length - 1);
-            var y = yOf(stoch.d[j]);
-            if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = '#2962FF';
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-        return last;
-    }
-
-    function renderAllIndPanes() {
-        var studies = getEnabledPaneStudies();
-        ensureIndPaneDom(studies);
-        if (!studies.length) return;
-
-        for (var i = 0; i < studies.length; i++) {
-            var ind = studies[i];
-            var pack = canvasCtx(document.getElementById('ind-canvas-' + ind.id));
-            var valEl = document.getElementById('ind-val-' + ind.id);
-            if (!pack) continue;
-            var last = null;
-            if (ind.id === 'ft-rsi') {
-                var closes = (indPaneState.ohlc || []).map(function (c) { return c.close; });
-                var rsiArr = (window.AIEngine && closes.length > 20) ? AIEngine.calculateAllRSI(closes, 14) : [];
-                last = drawRsiLikeLine(pack.ctx, pack.w, pack.h, rsiArr, ind.color, 0, 100, 30, 70);
-                if (valEl) valEl.textContent = last == null ? '—' : ('14  ' + last.toFixed(2).replace('.', ','));
-            } else if (ind.id === 'ft-macd') {
-                var closesM = (indPaneState.ohlc || []).map(function (c) { return c.close; });
-                var macd = buildMacdSeries(closesM);
-                last = drawMacdPane(pack.ctx, pack.w, pack.h, macd, ind.color);
-                if (valEl) valEl.textContent = last == null ? '—' : last.toFixed(4).replace('.', ',');
-            } else if (ind.id === 'ft-stoch') {
-                var stoch = buildStochSeries(indPaneState.ohlc || []);
-                last = drawStochPane(pack.ctx, pack.w, pack.h, stoch);
-                if (valEl) valEl.textContent = last == null ? '—' : last.toFixed(2).replace('.', ',');
-            } else if (ind.id === 'ft-open-interest') {
-                var oiSeries = (indPaneState.oi || []).map(function (p) { return p.v; });
-                last = drawRsiLikeLine(pack.ctx, pack.w, pack.h, oiSeries, ind.color, null, null, null, null);
-                if (valEl) valEl.textContent = last == null ? '—' : formatOiValue(last);
-            }
-        }
-    }
-
-    function updateOiPane() { updateIndicatorPanes(); }
-
-    function updateIndicatorPanes() {
-        var studies = getEnabledPaneStudies();
-        var col = document.querySelector('.chart-main-col');
-        if (multiTFMode || !studies.length) {
-            ensureIndPaneDom([]);
-            if (col) col.classList.remove('has-ind-panes');
-            indPaneState.lastKey = '';
-            return;
-        }
-        if (!selectedSymbol) {
-            ensureIndPaneDom(studies);
-            renderAllIndPanes();
-            return;
-        }
-        var market = oiMarketSymbol(selectedSymbol);
-        var tf = chartIntervalToBinance(currentChartInterval);
-        var oiPeriod = oiPeriodForInterval(currentChartInterval);
-        var needOi = currentChartStudies.indexOf(OI_STUDY_ID) !== -1;
-        var key = market + '|' + tf + '|' + studies.map(function (s) { return s.id; }).join(',') + (needOi ? '|oi:' + oiPeriod : '');
-        if (indPaneState.loading && indPaneState.lastKey === key) return;
-        indPaneState.loading = true;
-        indPaneState.lastKey = key;
-        ensureIndPaneDom(studies);
-        renderAllIndPanes();
-
-        var klineUrl = 'https://fapi.binance.com/fapi/v1/klines?symbol=' + encodeURIComponent(market) +
-            '&interval=' + encodeURIComponent(tf) + '&limit=150';
-        var tasks = [fetch(klineUrl).then(function (r) { return r.json(); })];
-        if (needOi) {
-            tasks.push(fetch('https://fapi.binance.com/futures/data/openInterestHist?symbol=' +
-                encodeURIComponent(market) + '&period=' + encodeURIComponent(oiPeriod) + '&limit=150').then(function (r) { return r.json(); }));
-        }
-
-        Promise.all(tasks)
-            .then(function (results) {
-                indPaneState.loading = false;
-                if (indPaneState.lastKey !== key) return;
-                var kl = results[0];
-                if (Array.isArray(kl)) {
-                    indPaneState.ohlc = kl.map(function (k) {
-                        return {
-                            time: k[0],
-                            open: parseFloat(k[1]),
-                            high: parseFloat(k[2]),
-                            low: parseFloat(k[3]),
-                            close: parseFloat(k[4]),
-                            volume: parseFloat(k[5])
-                        };
-                    });
-                } else {
-                    indPaneState.ohlc = [];
-                }
-                if (needOi) {
-                    var oiPts = parseOiHistRows(results[1]);
-                    if (!oiPts.length) {
-                        return fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=' + encodeURIComponent(market))
-                            .then(function (r) { return r.json(); })
-                            .then(function (now) {
-                                var v = Number(now && now.openInterest);
-                                var t = Number(now && now.time) || Date.now();
-                                indPaneState.oi = (isFinite(v) && v > 0)
-                                    ? [{ t: t - 120000, v: v }, { t: t, v: v }]
-                                    : [];
-                                renderAllIndPanes();
-                            });
-                    }
-                    indPaneState.oi = oiPts;
-                } else {
-                    indPaneState.oi = [];
-                }
-                renderAllIndPanes();
-            })
-            .catch(function () {
-                indPaneState.loading = false;
-                if (indPaneState.lastKey !== key) return;
-                indPaneState.ohlc = [];
-                indPaneState.oi = [];
-                renderAllIndPanes();
-            });
-    }
 
     function getTvChartApi() {
         if (!activeTvWidget) return null;
@@ -1302,12 +895,6 @@
         }
         initFloatingPanelDismiss();
         renderTfToolbar();
-        updateIndicatorPanes();
-        if (!indPaneState.timer) {
-            indPaneState.timer = setInterval(function () {
-                if (getEnabledPaneStudies().length) updateIndicatorPanes();
-            }, 60000);
-        }
     }
 
     window.selectChartTimeframe = function (interval) {
@@ -1430,10 +1017,19 @@
                 'header_fullscreen_button',
                 'timeframes_toolbar'
             ],
-            // Custom ft-* studies are rendered outside the TV widget
-            studies: compact ? [] : currentChartStudies.filter(function (id) {
-                return String(id).indexOf('ft-') !== 0;
-            }),
+            // Studies inside TV iframe → pan/zoom stay synced with the main chart
+            studies: compact ? [] : (function () {
+                var out = [];
+                for (var i = 0; i < currentChartStudies.length; i++) {
+                    var id = currentChartStudies[i];
+                    out.push(id);
+                    // OI id aliases — widget builds differ
+                    if (id === 'Open_Interest') {
+                        out.push('OpenInterest@tv-basicstudies');
+                    }
+                }
+                return out;
+            })(),
             show_popup_button: true,
             popup_width: '1000',
             popup_height: '650',
@@ -2952,7 +2548,6 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
-                renderAllIndPanes();
             }, 180);
         });
         window.addEventListener('orientationchange', function () {
@@ -2961,7 +2556,6 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
-                renderAllIndPanes();
             }, 280);
         });
 
