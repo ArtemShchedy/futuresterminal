@@ -1124,23 +1124,10 @@ a.topbar-logo:hover { opacity: 0.9; }
     pointer-events: none;
 }
 
-/* === Custom chart toolbar (replaces TV header) === */
-.chart-toolbar {
-    position: relative;
-    z-index: 12;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 42px;
-    padding: 0 10px 0 12px;
-    background: var(--bg-dark);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    box-sizing: border-box;
-}
-
+/* Custom toolbar disabled — TradingView native header is the chart panel */
+.chart-toolbar,
 .chart-toolbar.hidden {
-    display: none;
+    display: none !important;
 }
 
 .ctb-symbol {

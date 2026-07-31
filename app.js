@@ -1464,12 +1464,7 @@
         if (symEl) symEl.textContent = selectedSymbol ? (selectedSymbol + 'USDT') : '---';
 
         var toolbar = document.getElementById('chart-toolbar');
-        if (toolbar) toolbar.classList.toggle('hidden', !!multiTFMode);
-
-        var indBtn = document.getElementById('ctb-ind-btn');
-        if (indBtn) {
-            indBtn.classList.toggle('active', currentChartStudies.length > 0);
-        }
+        if (toolbar) toolbar.classList.add('hidden');
     }
 
     function renderTfToolbar() {
@@ -1620,31 +1615,33 @@
             style: compact ? '1' : String(currentChartStyle || '1'),
             locale: getTvLocale(),
             container_id: containerId,
-            // Custom toolbar + our Indicators dialog (no empty TV gray header bar)
-            hide_top_toolbar: true,
+            // Native TradingView chrome (toolbar + drawings) — not a custom clone
+            hide_top_toolbar: !!compact,
             hide_side_toolbar: !!compact,
             hide_legend: false,
             enable_publishing: false,
             save_image: !compact,
-            allow_symbol_change: false,
-            doNotStoreSettings: true,
-            client_id: 'futuresterminal',
-            user_id: getTvStorageUserId() + '-s' + getTvStudiesOnly().join('_').replace(/[^a-zA-Z0-9_@-]/g, '').slice(0, 80),
+            allow_symbol_change: !compact,
+            doNotStoreSettings: false,
+            client_id: 'tradingview.com',
+            user_id: getTvStorageUserId(),
             details: false,
             hotlist: false,
             calendar: false,
-            withdateranges: false,
-            enabled_features: [],
-            disabled_features: [
+            withdateranges: !compact,
+            enabled_features: compact ? [] : [
                 'header_widget',
-                'header_symbol_search',
-                'header_compare',
-                'header_screenshot',
+                'header_indicators',
                 'header_fullscreen_button',
-                'timeframes_toolbar',
-                'use_localstorage_for_settings'
+                'study_templates',
+                'side_toolbar_in_fullscreen_mode'
             ],
-            studies: compact ? [] : getTvStudiesOnly(),
+            disabled_features: compact ? [
+                'header_widget',
+                'left_toolbar',
+                'timeframes_toolbar'
+            ] : [],
+            studies: [],
             show_popup_button: true,
             popup_width: '1000',
             popup_height: '650',
@@ -1693,26 +1690,7 @@
         if (btn) btn.classList.toggle('active', multiTFMode);
         renderTfToolbar();
 
-        // Open Interest: synced price+OI charts (shared pan/zoom/crosshair)
-        if (isOiEnabled() && !multiTFMode && hasLightweightCharts()) {
-            if (!multiTFMode) activeTvWidget = null;
-            container.innerHTML = '';
-            container.className = '';
-            try {
-                updateOiPane();
-                setTimeout(function () {
-                    if (currentLoadId === thisLoadId) {
-                        document.getElementById('chart-loading').classList.add('hidden');
-                        resizeSyncedCharts();
-                    }
-                }, 400);
-            } catch (eOi) {
-                destroySyncedCharts();
-                container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555">Ошибка загрузки графика</div>';
-            }
-            return;
-        }
-
+        // Always use native TradingView widget (full toolbar). Custom OI overlay stays off-chart.
         destroySyncedCharts();
         if (!multiTFMode) activeTvWidget = null;
 

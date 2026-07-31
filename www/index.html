@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="favicon.svg?v=20260726-ft1">
     <link rel="preconnect" href="https://fapi.binance.com" crossorigin>
     <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
-    <link rel="stylesheet" href="app.css?v=20260731-nosmcbtn1">
+    <link rel="stylesheet" href="app.css?v=20260731-tvnative1">
 </head>
 
 <body class="capacitor-app">
@@ -103,8 +103,8 @@
             </button>
 
             <div class="chart-main-col">
-            <!-- Custom chart toolbar (replaces TradingView header) -->
-            <div class="chart-toolbar" id="chart-toolbar">
+            <!-- Hidden: native TradingView toolbar is used instead -->
+            <div class="chart-toolbar hidden" id="chart-toolbar" aria-hidden="true">
                 <button type="button" class="ctb-symbol" id="ctb-symbol" onclick="focusCoinSearch()" title="Поиск монеты">
                     <svg class="ctb-search-ico" viewBox="0 0 24 24" aria-hidden="true">
                         <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -430,12 +430,12 @@
         </div>
     </div>
 
-    <script src="owner-config.js?v=20260731-nosmcbtn1"></script>
-    <script src="shield.js?v=20260731-nosmcbtn1"></script>
-    <script src="ai-engine.js?v=20260731-nosmcbtn1"></script>
+    <script src="owner-config.js?v=20260731-tvnative1"></script>
+    <script src="shield.js?v=20260731-tvnative1"></script>
+    <script src="ai-engine.js?v=20260731-tvnative1"></script>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="app.js?v=20260731-nosmcbtn1"></script>
+    <script src="app.js?v=20260731-tvnative1"></script>
 </body>
 
 </html>
