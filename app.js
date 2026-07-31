@@ -479,9 +479,12 @@
         { id: 'MASimple@tv-basicstudies', label: 'SMA' },
         { id: 'Stochastic@tv-basicstudies', label: 'Stochastic' },
         { id: 'VWAP@tv-basicstudies', label: 'VWAP' },
-        // Built-in TV Open Interest (community Pine scripts like Leviathan cannot run in embed widget)
-        { id: 'OpenInterest@tv-basicstudies', label: 'Open Interest (OI)' }
+        // Custom Binance OI pane (TV embed cannot run Leviathan / built-in OI reliably)
+        { id: 'ft-open-interest', label: 'Open Interest (OI)' }
     ];
+
+    var OI_STUDY_ID = 'ft-open-interest';
+    var oiPaneState = { points: [], loading: false, timer: null, lastKey: '' };
 
     var TF_CATALOG = [
         {
@@ -614,6 +617,13 @@
         } catch (e) {
             currentChartStudies = [];
         }
+        // Migrate old non-working TV OI study ids to custom pane
+        currentChartStudies = currentChartStudies.map(function (id) {
+            if (id === 'OpenInterest@tv-basicstudies' || id === 'Open_Interest' || id === 'Open Interest@tv-basicstudies') {
+                return OI_STUDY_ID;
+            }
+            return id;
+        }).filter(function (id, i, arr) { return arr.indexOf(id) === i; });
     }
 
     function saveChartStudies() {
@@ -767,8 +777,175 @@
         if (enabled && idx === -1) currentChartStudies.push(studyId);
         if (!enabled && idx !== -1) currentChartStudies.splice(idx, 1);
         saveChartStudies();
+        if (studyId === OI_STUDY_ID) {
+            updateOiPane();
+            return;
+        }
         if (selectedSymbol) loadChart(selectedSymbol);
     };
+
+    function isOiEnabled() {
+        return currentChartStudies.indexOf(OI_STUDY_ID) !== -1;
+    }
+
+    function oiPeriodForInterval(iv) {
+        var n = String(iv || '15');
+        if (n === '1' || n === '3' || n === '5') return '5m';
+        if (n === '15') return '15m';
+        if (n === '30') return '30m';
+        if (n === '60' || n === '120') return '1h';
+        if (n === '240') return '4h';
+        if (n === '360') return '6h';
+        if (n === '480') return '6h';
+        if (n === '720') return '12h';
+        if (n === 'D' || n === '1D' || n === '1d') return '1d';
+        if (n === 'W' || n === '1W') return '1d';
+        return '15m';
+    }
+
+    function formatOiValue(v) {
+        var n = Number(v);
+        if (!isFinite(n)) return '—';
+        var abs = Math.abs(n);
+        if (abs >= 1e9) return (n / 1e9).toFixed(2).replace('.', ',') + ' B';
+        if (abs >= 1e6) return (n / 1e6).toFixed(2).replace('.', ',') + ' M';
+        if (abs >= 1e3) return (n / 1e3).toFixed(2).replace('.', ',') + ' K';
+        return n.toFixed(2).replace('.', ',');
+    }
+
+    function setOiPaneVisible(on) {
+        var pane = document.getElementById('oi-pane');
+        var col = document.querySelector('.chart-main-col');
+        if (!pane) return;
+        pane.classList.toggle('is-visible', !!on);
+        pane.setAttribute('aria-hidden', on ? 'false' : 'true');
+        if (col) col.classList.toggle('has-oi', !!on);
+    }
+
+    function drawOiPane() {
+        var canvas = document.getElementById('oi-pane-canvas');
+        var valueEl = document.getElementById('oi-pane-value');
+        if (!canvas) return;
+        var pts = oiPaneState.points || [];
+        var dpr = window.devicePixelRatio || 1;
+        var w = canvas.clientWidth || 0;
+        var h = canvas.clientHeight || 0;
+        if (w < 2 || h < 2) return;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#0B0B0F';
+        ctx.fillRect(0, 0, w, h);
+
+        if (!pts.length) {
+            ctx.fillStyle = '#8E9BAE';
+            ctx.font = '12px sans-serif';
+            ctx.fillText(oiPaneState.loading ? 'Загрузка Open Interest…' : 'Нет данных Open Interest', 12, 22);
+            if (valueEl) valueEl.textContent = '—';
+            return;
+        }
+
+        var min = pts[0].v;
+        var max = pts[0].v;
+        for (var i = 1; i < pts.length; i++) {
+            if (pts[i].v < min) min = pts[i].v;
+            if (pts[i].v > max) max = pts[i].v;
+        }
+        if (max <= min) { max = min + 1; }
+        var padX = 8;
+        var padY = 10;
+        var plotW = Math.max(1, w - padX * 2);
+        var plotH = Math.max(1, h - padY * 2);
+
+        // grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 1;
+        for (var g = 0; g < 3; g++) {
+            var gy = padY + (plotH * g) / 2;
+            ctx.beginPath();
+            ctx.moveTo(padX, gy);
+            ctx.lineTo(w - padX, gy);
+            ctx.stroke();
+        }
+
+        ctx.beginPath();
+        for (var j = 0; j < pts.length; j++) {
+            var x = padX + (plotW * j) / Math.max(1, pts.length - 1);
+            var y = padY + plotH - ((pts[j].v - min) / (max - min)) * plotH;
+            if (j === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#E8EEF7';
+        ctx.lineWidth = 1.6;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        var last = pts[pts.length - 1].v;
+        if (valueEl) valueEl.textContent = formatOiValue(last);
+
+        // last value badge
+        var ly = padY + plotH - ((last - min) / (max - min)) * plotH;
+        ctx.fillStyle = 'rgba(142,155,174,0.9)';
+        var label = formatOiValue(last);
+        ctx.font = '11px sans-serif';
+        var tw = ctx.measureText(label).width + 10;
+        var bx = w - tw - 6;
+        var by = Math.max(2, Math.min(h - 18, ly - 8));
+        ctx.fillRect(bx, by, tw, 16);
+        ctx.fillStyle = '#0B0B0F';
+        ctx.fillText(label, bx + 5, by + 12);
+    }
+
+    function updateOiPane() {
+        var enabled = isOiEnabled() && !multiTFMode;
+        setOiPaneVisible(enabled);
+        if (!enabled) {
+            oiPaneState.points = [];
+            oiPaneState.lastKey = '';
+            return;
+        }
+        if (!selectedSymbol) {
+            oiPaneState.points = [];
+            drawOiPane();
+            return;
+        }
+        var period = oiPeriodForInterval(currentChartInterval);
+        var key = selectedSymbol + '|' + period;
+        if (oiPaneState.loading && oiPaneState.lastKey === key) return;
+        oiPaneState.loading = true;
+        oiPaneState.lastKey = key;
+        drawOiPane();
+
+        var url = 'https://fapi.binance.com/futures/data/openInterestHist?symbol=' +
+            encodeURIComponent(selectedSymbol) + '&period=' + encodeURIComponent(period) + '&limit=150';
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                oiPaneState.loading = false;
+                if (!isOiEnabled() || oiPaneState.lastKey !== key) return;
+                if (!Array.isArray(data)) {
+                    oiPaneState.points = [];
+                    drawOiPane();
+                    return;
+                }
+                oiPaneState.points = data.map(function (row) {
+                    return {
+                        t: Number(row.timestamp) || 0,
+                        v: Number(row.sumOpenInterestValue || row.sumOpenInterest) || 0
+                    };
+                }).filter(function (p) { return p.v > 0; });
+                drawOiPane();
+            })
+            .catch(function () {
+                oiPaneState.loading = false;
+                if (oiPaneState.lastKey !== key) return;
+                oiPaneState.points = [];
+                drawOiPane();
+            });
+    }
 
     function getTvChartApi() {
         if (!activeTvWidget) return null;
@@ -880,6 +1057,12 @@
         }
         initFloatingPanelDismiss();
         renderTfToolbar();
+        updateOiPane();
+        if (!oiPaneState.timer) {
+            oiPaneState.timer = setInterval(function () {
+                if (isOiEnabled()) updateOiPane();
+            }, 60000);
+        }
     }
 
     window.selectChartTimeframe = function (interval) {
@@ -912,6 +1095,7 @@
             }
             if (applied) {
                 renderTfToolbar();
+                updateOiPane();
                 return;
             }
         }
@@ -999,7 +1183,10 @@
                 'header_fullscreen_button',
                 'timeframes_toolbar'
             ],
-            studies: compact ? [] : currentChartStudies.slice(),
+            // Custom ft-* studies are rendered outside the TV widget
+            studies: compact ? [] : currentChartStudies.filter(function (id) {
+                return String(id).indexOf('ft-') !== 0;
+            }),
             show_popup_button: true,
             popup_width: '1000',
             popup_height: '650',
@@ -1085,14 +1272,17 @@
                     document.getElementById('chart-loading').classList.add('hidden');
                 }
             }, 700);
+            updateOiPane();
         } catch (e) {
             container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555">Ошибка загрузки графика</div>';
+            updateOiPane();
         }
     }
 
     window.toggleMultiTF = function () {
         multiTFMode = !multiTFMode;
         if (selectedSymbol) loadChart(selectedSymbol);
+        else updateOiPane();
     };
 
     var _sidebarHideTimer = null;
@@ -2478,6 +2668,7 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
+                drawOiPane();
             }, 180);
         });
         window.addEventListener('orientationchange', function () {
@@ -2486,6 +2677,7 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
+                drawOiPane();
             }, 280);
         });
 

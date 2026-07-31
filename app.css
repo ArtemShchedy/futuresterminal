@@ -829,6 +829,48 @@ a.topbar-logo:hover { opacity: 0.9; }
     overflow: hidden;
 }
 
+.oi-pane {
+    display: none;
+    flex: 0 0 168px;
+    min-height: 140px;
+    max-height: 220px;
+    flex-direction: column;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0B0B0F;
+    position: relative;
+    z-index: 2;
+}
+.oi-pane.is-visible {
+    display: flex;
+}
+.oi-pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 12px 2px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.oi-pane-title {
+    font-weight: 600;
+    color: #c9d2e0;
+}
+.oi-pane-value {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    color: #E8EEF7;
+}
+.oi-pane-canvas {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: block;
+}
+.chart-main-col.has-oi .chart-viewport {
+    flex: 1 1 auto;
+}
+
 .chart-area iframe,
 .chart-area .tradingview-widget-container,
 .chart-area #tradingview-container {
