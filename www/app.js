@@ -1996,6 +1996,30 @@
             });
     }
 
+    function renderTrendPointer(r) {
+        var box = document.getElementById('ai-trend-pointer');
+        var arrow = document.getElementById('ai-trend-arrow');
+        var label = document.getElementById('ai-trend-label');
+        var strEl = document.getElementById('ai-trend-str');
+        if (!box || !arrow || !label) return;
+        var ct = r.chartTrend || {};
+        var dir = ct.direction || r.direction || 'sideways';
+        var strength = ct.strength != null ? ct.strength : (r.strength || 0);
+        var conf = ct.confidence != null ? ct.confidence : Math.max(0, Math.min(100, Math.round(strength)));
+        var m = window.__i18nMap || {};
+        var text = dir === 'up'
+            ? (m['trend.up'] || 'Рост')
+            : dir === 'down'
+                ? (m['trend.down'] || 'Спад')
+                : (m['trend.flat'] || 'Боковик');
+        var arr = dir === 'up' ? '↑' : dir === 'down' ? '↓' : '→';
+        box.setAttribute('data-dir', dir);
+        box.title = (m['trend.byChart'] || 'Тренд по графику') + ': ' + text + ' · ' + strength + '%';
+        arrow.textContent = arr;
+        label.textContent = text;
+        if (strEl) strEl.textContent = strength + '% · ' + conf + '%';
+    }
+
     function chartIntervalToBinance(iv) {
         var n = String(iv || currentChartInterval || '15');
         var map = {
@@ -2142,6 +2166,7 @@
         var aiPrice = document.getElementById('ai-price');
         if (aiSym) aiSym.textContent = symbol + ' / USDT';
         if (aiPrice) aiPrice.textContent = formatPrice(r.price);
+        renderTrendPointer(r);
 
         var m = window.__i18nMap || {};
 
