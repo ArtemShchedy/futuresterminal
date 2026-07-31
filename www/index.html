@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="favicon.svg?v=20260726-ft1">
     <link rel="preconnect" href="https://fapi.binance.com" crossorigin>
     <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
-    <link rel="stylesheet" href="app.css?v=20260731-sync4">
+    <link rel="stylesheet" href="app.css?v=20260731-tvind1">
 </head>
 
 <body class="capacitor-app">
@@ -120,13 +120,10 @@
                     <div class="ctb-menu" id="ctb-style-menu" style="display:none"></div>
                 </div>
                 <span class="ctb-sep"></span>
-                <div class="ctb-dd" id="ctb-ind-wrap">
-                    <button type="button" class="ctb-btn" id="ctb-ind-btn" onclick="toggleCtbMenu('ind')">
-                        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span data-i18n="chart.indicators">Индикаторы</span>
-                    </button>
-                    <div class="ctb-menu ctb-menu-ind" id="ctb-ind-menu" style="display:none"></div>
-                </div>
+                <button type="button" class="ctb-btn ctb-oi-btn" id="ctb-oi-btn" onclick="toggleOpenInterest()" title="Open Interest (Binance)">
+                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 18V6M8 18v-5M12 18V9M16 18v-7M20 18V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span>OI</span>
+                </button>
                 <span class="ctb-sep"></span>
                 <div class="tf-toolbar-group">
                     <div class="tf-favorites" id="tf-favorites"></div>
@@ -408,12 +405,12 @@
         </div>
     </div>
 
-    <script src="owner-config.js?v=20260731-sync4"></script>
-    <script src="shield.js?v=20260731-sync4"></script>
-    <script src="ai-engine.js?v=20260731-sync4"></script>
+    <script src="owner-config.js?v=20260731-tvind1"></script>
+    <script src="shield.js?v=20260731-tvind1"></script>
+    <script src="ai-engine.js?v=20260731-tvind1"></script>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="app.js?v=20260731-sync4"></script>
+    <script src="app.js?v=20260731-tvind1"></script>
 </body>
 
 </html>

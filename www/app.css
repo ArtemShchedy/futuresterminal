@@ -1283,6 +1283,12 @@ a.topbar-logo:hover { opacity: 0.9; }
     justify-content: center;
 }
 
+.ctb-oi-btn.active {
+    border-color: rgba(171, 71, 188, 0.75);
+    color: #e0b3f0;
+    background: rgba(171, 71, 188, 0.14);
+}
+
 .ctb-spacer {
     flex: 1;
     min-width: 8px;

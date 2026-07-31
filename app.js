@@ -471,18 +471,9 @@
         { id: '3', labelKey: 'chart.styleArea', fallback: 'Область' }
     ];
 
-    // TV studies (inside widget, pan with chart). OI is custom — TV embed has no reliable OI study.
+    // Indicators: native TradingView toolbar (full searchable list).
+    // OI stays custom (Binance) — free TV embed has no reliable Open Interest study.
     var OI_STUDY_ID = 'ft-open-interest';
-    var CHART_INDICATORS = [
-        { id: 'RSI@tv-basicstudies', label: 'RSI' },
-        { id: 'MACD@tv-basicstudies', label: 'MACD' },
-        { id: 'Stochastic@tv-basicstudies', label: 'Stochastic' },
-        { id: OI_STUDY_ID, label: 'Open Interest (OI)', custom: true },
-        { id: 'BB@tv-basicstudies', label: 'Bollinger Bands' },
-        { id: 'MAExp@tv-basicstudies', label: 'EMA' },
-        { id: 'MASimple@tv-basicstudies', label: 'SMA' },
-        { id: 'VWAP@tv-basicstudies', label: 'VWAP' }
-    ];
     var oiPaneState = { points: [], candles: [], loading: false, timer: null, lastKey: '' };
     var syncedChartState = {
         priceChart: null,
@@ -625,34 +616,18 @@
         } catch (e) {
             currentChartStudies = [];
         }
-        // Normalize legacy ids (never keep Open_Interest for TV — it blanks all studies)
+        // Only persist custom OI flag — all other indicators come from native TV UI
         var migrate = {
-            'ft-rsi': 'RSI@tv-basicstudies',
-            'ft-macd': 'MACD@tv-basicstudies',
-            'ft-stoch': 'Stochastic@tv-basicstudies',
             'Open_Interest': OI_STUDY_ID,
             'OpenInterest@tv-basicstudies': OI_STUDY_ID,
             'Open Interest@tv-basicstudies': OI_STUDY_ID
         };
-        var allowed = {};
-        for (var a = 0; a < CHART_INDICATORS.length; a++) allowed[CHART_INDICATORS[a].id] = true;
-        currentChartStudies = currentChartStudies.map(function (id) {
-            return migrate[id] || id;
-        }).filter(function (id, i, arr) {
-            return allowed[id] && arr.indexOf(id) === i;
+        var oiOn = currentChartStudies.some(function (id) {
+            var n = migrate[id] || id;
+            return n === OI_STUDY_ID;
         });
+        currentChartStudies = oiOn ? [OI_STUDY_ID] : [];
         saveChartStudies();
-    }
-
-    function getTvStudiesOnly() {
-        // Only known TV study ids — never pass OI / ft-* / Open_Interest
-        var out = [];
-        for (var i = 0; i < CHART_INDICATORS.length; i++) {
-            var ind = CHART_INDICATORS[i];
-            if (ind.custom) continue;
-            if (currentChartStudies.indexOf(ind.id) !== -1) out.push(ind.id);
-        }
-        return out;
     }
 
     function isOiEnabled() {
@@ -665,7 +640,7 @@
 
     function closeCtbMenus() {
         openCtbMenu = null;
-        ['ctb-style-menu', 'ctb-ind-menu'].forEach(function (id) {
+        ['ctb-style-menu'].forEach(function (id) {
             var el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
@@ -730,8 +705,8 @@
     }
 
     window.toggleCtbMenu = function (name) {
-        var map = { style: 'ctb-style-menu', ind: 'ctb-ind-menu' };
-        var wrapMap = { style: 'ctb-style-wrap', ind: 'ctb-ind-wrap' };
+        var map = { style: 'ctb-style-menu' };
+        var wrapMap = { style: 'ctb-style-wrap' };
         var id = map[name];
         if (!id) return;
         var menu = document.getElementById(id);
@@ -741,7 +716,6 @@
         if (!willOpen) return;
         openCtbMenu = name;
         if (name === 'style') renderCtbStyleMenu();
-        if (name === 'ind') renderCtbIndMenu();
         menu.style.display = 'block';
         var wrap = document.getElementById(wrapMap[name]);
         if (wrap) wrap.classList.add('open');
@@ -756,18 +730,6 @@
             var s = CHART_STYLES[i];
             var label = m[s.labelKey] || s.fallback;
             html += '<button type="button" class="ctb-menu-item' + (s.id === currentChartStyle ? ' active' : '') + '" onclick="selectChartStyle(\'' + s.id + '\')">' + label + '</button>';
-        }
-        menu.innerHTML = html;
-    }
-
-    function renderCtbIndMenu() {
-        var menu = document.getElementById('ctb-ind-menu');
-        if (!menu) return;
-        var html = '';
-        for (var i = 0; i < CHART_INDICATORS.length; i++) {
-            var ind = CHART_INDICATORS[i];
-            var on = currentChartStudies.indexOf(ind.id) !== -1;
-            html += '<label class="ctb-menu-item"><input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="toggleChartStudy(\'' + ind.id + '\', this.checked)"> ' + ind.label + '</label>';
         }
         menu.innerHTML = html;
     }
@@ -805,21 +767,11 @@
         if (selectedSymbol) loadChart(selectedSymbol);
     };
 
-    window.toggleChartStudy = function (studyId, enabled) {
-        var idx = currentChartStudies.indexOf(studyId);
-        if (enabled && idx === -1) currentChartStudies.push(studyId);
-        if (!enabled && idx !== -1) currentChartStudies.splice(idx, 1);
+    window.toggleOpenInterest = function () {
+        var on = !isOiEnabled();
+        currentChartStudies = on ? [OI_STUDY_ID] : [];
         saveChartStudies();
-        // OI uses synced dual chart (not TV iframe) — always rebuild chart mode
-        if (studyId === OI_STUDY_ID) {
-            if (selectedSymbol) loadChart(selectedSymbol);
-            else updateOiPane();
-            return;
-        }
-        if (shouldUseSyncedOiChart()) {
-            // Price+OI already synced; TV studies need TV mode (OI off)
-            return;
-        }
+        updateChartToolbarUI();
         if (selectedSymbol) loadChart(selectedSymbol);
         else updateOiPane();
     };
@@ -1271,6 +1223,12 @@
 
         var toolbar = document.getElementById('chart-toolbar');
         if (toolbar) toolbar.classList.toggle('hidden', !!multiTFMode);
+
+        var oiBtn = document.getElementById('ctb-oi-btn');
+        if (oiBtn) {
+            oiBtn.classList.toggle('active', isOiEnabled());
+            oiBtn.setAttribute('aria-pressed', isOiEnabled() ? 'true' : 'false');
+        }
     }
 
     function renderTfToolbar() {
@@ -1420,32 +1378,42 @@
             style: compact ? '1' : String(currentChartStyle || '1'),
             locale: getTvLocale(),
             container_id: containerId,
-            // Custom top toolbar; native TV side tools for position drawings (price-anchored)
-            hide_top_toolbar: true,
+            // Native TV top toolbar = Indicators with full searchable list
+            hide_top_toolbar: !!compact,
             hide_side_toolbar: !!compact,
             hide_legend: false,
             enable_publishing: false,
             save_image: !compact,
             allow_symbol_change: false,
-            // Avoid stale TV localStorage wiping/conflicting with our studies list
-            doNotStoreSettings: true,
+            doNotStoreSettings: false,
             client_id: 'futuresterminal',
-            user_id: getTvStorageUserId() + '-s' + getTvStudiesOnly().join('_').replace(/[^a-zA-Z0-9_@-]/g, '').slice(0, 80),
+            user_id: getTvStorageUserId(),
             details: false,
             hotlist: false,
             calendar: false,
             withdateranges: false,
-            enabled_features: compact ? [] : [],
-            disabled_features: [
+            enabled_features: compact ? [] : [
+                'header_indicators',
+                'study_templates'
+            ],
+            disabled_features: compact ? [
                 'header_widget',
+                'timeframes_toolbar',
+                'use_localstorage_for_settings'
+            ] : [
+                // Keep Indicators; hide duplicate chrome we already cover in our toolbar
                 'header_symbol_search',
                 'header_compare',
                 'header_screenshot',
                 'header_fullscreen_button',
-                'timeframes_toolbar',
-                'use_localstorage_for_settings'
+                'header_chart_type',
+                'header_undo_redo',
+                'header_saveload',
+                'header_resolutions',
+                'header_interval_dialog_button',
+                'timeframes_toolbar'
             ],
-            studies: compact ? [] : getTvStudiesOnly(),
+            studies: [],
             show_popup_button: true,
             popup_width: '1000',
             popup_height: '650',
