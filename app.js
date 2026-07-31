@@ -478,7 +478,9 @@
         { id: 'MAExp@tv-basicstudies', label: 'EMA' },
         { id: 'MASimple@tv-basicstudies', label: 'SMA' },
         { id: 'Stochastic@tv-basicstudies', label: 'Stochastic' },
-        { id: 'VWAP@tv-basicstudies', label: 'VWAP' }
+        { id: 'VWAP@tv-basicstudies', label: 'VWAP' },
+        // Built-in TV Open Interest (community Pine scripts like Leviathan cannot run in embed widget)
+        { id: 'OpenInterest@tv-basicstudies', label: 'Open Interest (OI)' }
     ];
 
     var TF_CATALOG = [
