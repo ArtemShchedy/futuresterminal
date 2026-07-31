@@ -899,6 +899,27 @@
         ctx.fillText(label, bx + 5, by + 12);
     }
 
+    function oiMarketSymbol(sym) {
+        var s = String(sym || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!s) return '';
+        if (s.slice(-4) === 'USDT') return s;
+        return s + 'USDT';
+    }
+
+    function parseOiHistRows(data) {
+        if (!Array.isArray(data)) return [];
+        return data.map(function (row) {
+            var v = Number(row && (row.sumOpenInterestValue != null ? row.sumOpenInterestValue : row.sumOpenInterest));
+            if (!isFinite(v) || v <= 0) {
+                v = Number(row && row.openInterest);
+            }
+            return {
+                t: Number(row && row.timestamp) || Number(row && row.time) || 0,
+                v: isFinite(v) ? v : 0
+            };
+        }).filter(function (p) { return p.v > 0; });
+    }
+
     function updateOiPane() {
         var enabled = isOiEnabled() && !multiTFMode;
         setOiPaneVisible(enabled);
@@ -912,31 +933,53 @@
             drawOiPane();
             return;
         }
+        var market = oiMarketSymbol(selectedSymbol);
         var period = oiPeriodForInterval(currentChartInterval);
-        var key = selectedSymbol + '|' + period;
+        var key = market + '|' + period;
+        if (!market) {
+            oiPaneState.points = [];
+            drawOiPane();
+            return;
+        }
         if (oiPaneState.loading && oiPaneState.lastKey === key) return;
         oiPaneState.loading = true;
         oiPaneState.lastKey = key;
         drawOiPane();
 
-        var url = 'https://fapi.binance.com/futures/data/openInterestHist?symbol=' +
-            encodeURIComponent(selectedSymbol) + '&period=' + encodeURIComponent(period) + '&limit=150';
-        fetch(url)
+        var histUrl = 'https://fapi.binance.com/futures/data/openInterestHist?symbol=' +
+            encodeURIComponent(market) + '&period=' + encodeURIComponent(period) + '&limit=150';
+        var nowUrl = 'https://fapi.binance.com/fapi/v1/openInterest?symbol=' + encodeURIComponent(market);
+
+        fetch(histUrl)
             .then(function (r) { return r.json(); })
             .then(function (data) {
+                if (!isOiEnabled() || oiPaneState.lastKey !== key) return null;
+                var pts = parseOiHistRows(data);
+                if (pts.length) {
+                    oiPaneState.loading = false;
+                    oiPaneState.points = pts;
+                    drawOiPane();
+                    return null;
+                }
+                // Fallback: current OI point so pane is never empty when market has OI
+                return fetch(nowUrl).then(function (r2) { return r2.json(); });
+            })
+            .then(function (now) {
+                if (now == null) return;
                 oiPaneState.loading = false;
                 if (!isOiEnabled() || oiPaneState.lastKey !== key) return;
-                if (!Array.isArray(data)) {
+                var v = Number(now.openInterest);
+                if (isFinite(v) && v > 0) {
+                    var t = Number(now.time) || Date.now();
+                    // Flat mini-series so the line is visible
+                    oiPaneState.points = [
+                        { t: t - 4 * 60000, v: v },
+                        { t: t - 2 * 60000, v: v },
+                        { t: t, v: v }
+                    ];
+                } else {
                     oiPaneState.points = [];
-                    drawOiPane();
-                    return;
                 }
-                oiPaneState.points = data.map(function (row) {
-                    return {
-                        t: Number(row.timestamp) || 0,
-                        v: Number(row.sumOpenInterestValue || row.sumOpenInterest) || 0
-                    };
-                }).filter(function (p) { return p.v > 0; });
                 drawOiPane();
             })
             .catch(function () {
