@@ -2601,49 +2601,6 @@ a.topbar-logo:hover { opacity: 0.9; }
     padding: 16px 8px;
 }
 
-.smc-main {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--card-border);
-}
-
-.smc-main.up {
-    border-color: rgba(0, 230, 118, 0.25);
-    background: rgba(0, 230, 118, 0.06);
-}
-
-.smc-main.down {
-    border-color: rgba(255, 51, 102, 0.25);
-    background: rgba(255, 51, 102, 0.06);
-}
-
-.smc-main.sideways {
-    border-color: rgba(255, 189, 46, 0.25);
-    background: rgba(255, 189, 46, 0.05);
-}
-
-.smc-main-dir {
-    font-size: 1.05rem;
-    font-weight: 700;
-    flex: 1;
-}
-
-.smc-main.up .smc-main-dir { color: var(--primary); }
-.smc-main.down .smc-main-dir { color: var(--accent); }
-.smc-main.sideways .smc-main-dir { color: var(--warn); }
-
-.smc-main-str {
-    font-family: var(--font-mono);
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text);
-}
-
 .smc-main-htf {
     font-size: 0.7rem;
     color: var(--text-dim);

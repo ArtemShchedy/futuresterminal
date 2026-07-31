@@ -2064,13 +2064,7 @@
             return;
         }
 
-        var dirArrow = smc.direction === 'up' ? '↑' : smc.direction === 'down' ? '↓' : '→';
-        var dirLabel = smc.direction === 'up' ? t('ai.dirUp', 'Рост') : smc.direction === 'down' ? t('ai.dirDown', 'Спад') : t('ai.dirSide', 'Боковик');
         var html = '';
-        html += '<div class="smc-main ' + smc.direction + '">';
-        html += '<div class="smc-main-dir">' + dirArrow + ' ' + dirLabel + '</div>';
-        html += '<div class="smc-main-str">' + smc.strength + '%</div>';
-        html += '</div>';
 
         // RU: engine narrative; other langs: localized static summary
         var lang = 'ru';
