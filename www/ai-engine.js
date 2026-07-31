@@ -1022,6 +1022,135 @@ var AIEngine = (function () {
         };
     }
 
+    // Precision trend from chart geometry (structure + EMA ribbon + slope + ADX/MACD/VWAP)
+    function computePrecisionTrend(ohlc, extras) {
+        extras = extras || {};
+        if (!ohlc || ohlc.length < 30) {
+            return { direction: 'sideways', strength: 45, confidence: 0, votes: 0 };
+        }
+        var closes = ohlc.map(function (c) { return c.close; });
+        var highs = ohlc.map(function (c) { return c.high; });
+        var lows = ohlc.map(function (c) { return c.low; });
+        var n = closes.length;
+        var price = closes[n - 1];
+        var bull = 0, bear = 0, votes = 0;
+
+        // 1) Multi-EMA ribbon (3/8/21/50) — chart trend backbone
+        var e3 = ema(closes, 3), e8 = ema(closes, 8), e21 = ema(closes, 21), e50 = ema(closes, 50);
+        if (e3 != null && e8 != null && e21 != null) {
+            votes++;
+            if (e3 > e8 && e8 > e21) bull += 22;
+            else if (e3 < e8 && e8 < e21) bear += 22;
+            else if (e3 > e21) bull += 8;
+            else bear += 8;
+            if (e50 != null) {
+                if (price > e50 && e21 > e50) bull += 12;
+                else if (price < e50 && e21 < e50) bear += 12;
+            }
+        }
+
+        // 2) Linear regression slope on last 20 closes (normalized by ATR)
+        var look = Math.min(20, n);
+        var atr = calcATR(ohlc, 14) || Math.abs(price) * 0.01 || 1;
+        var sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+        for (var i = 0; i < look; i++) {
+            var x = i;
+            var y = closes[n - look + i];
+            sumX += x; sumY += y; sumXY += x * y; sumXX += x * x;
+        }
+        var denom = look * sumXX - sumX * sumX;
+        var slope = denom !== 0 ? (look * sumXY - sumX * sumY) / denom : 0;
+        var slopeNorm = slope / atr; // ~change per bar in ATRs
+        votes++;
+        if (slopeNorm > 0.08) bull += 18 + Math.min(10, Math.round(slopeNorm * 40));
+        else if (slopeNorm < -0.08) bear += 18 + Math.min(10, Math.round(-slopeNorm * 40));
+        else if (slopeNorm > 0.02) bull += 6;
+        else if (slopeNorm < -0.02) bear += 6;
+
+        // 3) Swing structure HH/HL vs LH/LL on last ~40 bars
+        var struct = detectMarketStructure(ohlc);
+        votes++;
+        if (struct.structure === 'bullish') bull += 20;
+        else if (struct.structure === 'bearish') bear += 20;
+        if (struct.event === 'bos_bull' || struct.event === 'choch_bull') bull += 14;
+        if (struct.event === 'bos_bear' || struct.event === 'choch_bear') bear += 14;
+
+        // 4) Recent pivot: last 8 vs previous 8 midpoint
+        var midNow = 0, midPrev = 0;
+        for (var j = 0; j < 8; j++) {
+            midNow += (highs[n - 1 - j] + lows[n - 1 - j]) / 2;
+            midPrev += (highs[n - 9 - j] + lows[n - 9 - j]) / 2;
+        }
+        midNow /= 8; midPrev /= 8;
+        votes++;
+        if (midNow > midPrev * 1.0015) bull += 12;
+        else if (midNow < midPrev * 0.9985) bear += 12;
+
+        // 5) ADX / DI confirmation when available
+        var adxData = extras.adxData || calcADX(ohlc);
+        if (adxData && adxData.adx != null) {
+            votes++;
+            if (adxData.adx >= 22) {
+                if (adxData.bullish) bull += 10 + Math.min(12, Math.round((adxData.adx - 22) * 0.5));
+                else bear += 10 + Math.min(12, Math.round((adxData.adx - 22) * 0.5));
+            } else {
+                // weak trend → damp later via gap threshold
+                bull += 2; bear += 2;
+            }
+        }
+
+        // 6) MACD histogram momentum
+        var macdData = extras.macdData || calcMACD(closes);
+        if (macdData) {
+            votes++;
+            if (macdData.crossover || macdData.histogram > 0) bull += macdData.crossover ? 14 : 8;
+            if (macdData.crossunder || macdData.histogram < 0) bear += macdData.crossunder ? 14 : 8;
+        }
+
+        // 7) VWAP side
+        var vwapData = extras.vwapData || calcVWAP(ohlc);
+        if (vwapData && vwapData.vwap) {
+            votes++;
+            if (price > vwapData.vwap) bull += 8;
+            else bear += 8;
+        }
+
+        // 8) Candle body pressure last 6 bars
+        var bodyBull = 0, bodyBear = 0;
+        for (var k = n - 6; k < n; k++) {
+            var body = ohlc[k].close - ohlc[k].open;
+            if (body > 0) bodyBull += body;
+            else bodyBear += Math.abs(body);
+        }
+        votes++;
+        if (bodyBull > bodyBear * 1.25) bull += 10;
+        else if (bodyBear > bodyBull * 1.25) bear += 10;
+
+        var total = bull + bear || 1;
+        var diff = Math.abs(bull - bear);
+        var adxWeak = adxData && adxData.adx < 20;
+        var needGap = adxWeak ? 16 : (adxData && adxData.adx > 30 ? 8 : 12);
+        var direction = bull > bear + needGap ? 'up' : bear > bull + needGap ? 'down' : 'sideways';
+        var strength;
+        if (direction !== 'sideways') {
+            strength = 52 + (diff / total) * 42;
+            strength = Math.max(55, Math.min(96, Math.round(strength)));
+        } else {
+            strength = Math.max(35, Math.min(58, Math.round(50 - (diff / total) * 10)));
+        }
+        var confidence = Math.max(0, Math.min(100, Math.round((diff / total) * 100)));
+        return {
+            direction: direction,
+            strength: strength,
+            confidence: confidence,
+            votes: votes,
+            bullScore: Math.round(bull),
+            bearScore: Math.round(bear),
+            slopeNorm: slopeNorm,
+            structure: struct.structure
+        };
+    }
+
     // --- Main Analysis Function ---
 
     function analyzeChart(ohlc, timeframe, symbol, htfCache) {
@@ -1696,6 +1825,31 @@ var AIEngine = (function () {
             });
         }
 
+        var chartTrend = computePrecisionTrend(ohlc, {
+            adxData: adxData,
+            macdData: macdData,
+            vwapData: vwapData
+        });
+
+        // Chart-geometry trend can override weak / conflicting classic bias
+        if (chartTrend && chartTrend.direction !== 'sideways') {
+            if (direction === 'sideways' || strength < 58) {
+                direction = chartTrend.direction;
+                strength = Math.max(strength, chartTrend.strength);
+                reasoning.unshift(chartTrend.direction === 'up'
+                    ? 'График: точный тренд вверх (EMA-лента + структура + наклон)'
+                    : 'График: точный тренд вниз (EMA-лента + структура + наклон)');
+            } else if (chartTrend.direction === direction) {
+                strength = Math.min(96, Math.round(strength + 3 + chartTrend.confidence * 0.04));
+            } else if (chartTrend.confidence >= 55 && chartTrend.strength >= 70 && strength < 70) {
+                direction = chartTrend.direction;
+                strength = Math.round((strength + chartTrend.strength) / 2);
+                reasoning.unshift(chartTrend.direction === 'up'
+                    ? 'График перевешивает: подтверждённый восходящий тренд'
+                    : 'График перевешивает: подтверждённый нисходящий тренд');
+            }
+        }
+
         var smcForecast = analyzeSMC(ohlc, htfCache, price, atr, direction, Math.round(strength));
 
         // Blend strong SMC confluence into primary forecast & short horizons
@@ -1731,6 +1885,7 @@ var AIEngine = (function () {
         return {
             direction: direction, strength: Math.round(strength), reasoning: reasoning, rsi: rsi,
             trend: bullScore - bearScore,
+            chartTrend: chartTrend,
             reversalWarning: reversalWarning,
             reversalReasons: reversalReasons,
             volatilityWarning: volatilityWarning && volatilityReasons.length > 0,
@@ -1741,7 +1896,8 @@ var AIEngine = (function () {
             bullScore: bullScore, bearScore: bearScore,
             earlyWarning: earlyWarning,
             longTermHorizons: longTermHorizons,
-            smcForecast: smcForecast
+            smcForecast: smcForecast,
+            timeframe: timeframe
         };
     }
 
@@ -1783,6 +1939,7 @@ var AIEngine = (function () {
     return {
         analyzeChart: analyzeChart,
         analyzeSMC: analyzeSMC,
+        computePrecisionTrend: computePrecisionTrend,
         calculateAllRSI: calculateAllRSI,
         calcRSIFromOHLC: calcRSIFromOHLC,
         PREDICTION_HORIZONS: PREDICTION_HORIZONS,

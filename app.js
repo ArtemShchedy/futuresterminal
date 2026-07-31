@@ -1096,10 +1096,12 @@
             if (applied) {
                 renderTfToolbar();
                 updateOiPane();
+                try { runAIAnalysis(selectedSymbol, false); } catch (e3) {}
                 return;
             }
         }
         loadChart(selectedSymbol);
+        try { runAIAnalysis(selectedSymbol, false); } catch (e4) {}
     };
 
     window.toggleTfFavorite = function (interval, ev) {
@@ -1456,8 +1458,9 @@
         }
 
         var fullSymbol = symbol + 'USDT';
-        var baseTF = '15m';
-        var limit = isBackground ? 200 : 100;
+        // Match AI base timeframe to the chart the user is looking at
+        var baseTF = chartIntervalToBinance(currentChartInterval);
+        var limit = isBackground ? 200 : 150;
         var baseUrl = 'https://fapi.binance.com/fapi/v1/klines?symbol=' + fullSymbol + '&interval=' + baseTF + '&limit=' + limit;
         var rsi5mUrl = 'https://fapi.binance.com/fapi/v1/klines?symbol=' + fullSymbol + '&interval=5m&limit=' + limit;
 
@@ -1514,6 +1517,41 @@
             .then(function () {
                 if (gen === aiAnalysisGen) aiAnalysisInFlight = false;
             });
+    }
+
+    function renderTrendPointer(r) {
+        var box = document.getElementById('ai-trend-pointer');
+        var arrow = document.getElementById('ai-trend-arrow');
+        var label = document.getElementById('ai-trend-label');
+        var strEl = document.getElementById('ai-trend-str');
+        if (!box || !arrow || !label) return;
+        var ct = r.chartTrend || {};
+        var dir = ct.direction || r.direction || 'sideways';
+        var strength = ct.strength != null ? ct.strength : (r.strength || 0);
+        var conf = ct.confidence != null ? ct.confidence : Math.max(0, Math.min(100, Math.round(strength)));
+        var m = window.__i18nMap || {};
+        var text = dir === 'up'
+            ? (m['trend.up'] || 'Рост')
+            : dir === 'down'
+                ? (m['trend.down'] || 'Спад')
+                : (m['trend.flat'] || 'Боковик');
+        var arr = dir === 'up' ? '↑' : dir === 'down' ? '↓' : '→';
+        box.setAttribute('data-dir', dir);
+        box.title = (m['trend.byChart'] || 'Тренд по графику') + ': ' + text + ' · ' + strength + '%';
+        arrow.textContent = arr;
+        label.textContent = text;
+        if (strEl) strEl.textContent = strength + '% · ' + conf + '%';
+    }
+
+    function chartIntervalToBinance(iv) {
+        var n = String(iv || currentChartInterval || '15');
+        var map = {
+            '1': '1m', '3': '3m', '5': '5m', '15': '15m', '30': '30m',
+            '45': '30m', '60': '1h', '120': '2h', '180': '4h', '240': '4h',
+            '360': '6h', '480': '8h', '720': '12h',
+            'D': '1d', '1D': '1d', 'W': '1w', '1W': '1w'
+        };
+        return map[n] || '15m';
     }
 
     function renderShortTermHorizons(r) {
@@ -1653,6 +1691,7 @@
         if (aiPrice) aiPrice.textContent = formatPrice(r.price);
 
         var m = window.__i18nMap || {};
+        renderTrendPointer(r);
 
         // Volatility warning (BB squeeze — separate from reversal)
         var volWarn = document.getElementById('volatility-warning');
@@ -3023,6 +3062,10 @@
                 'smc.flowBull': 'Order Flow: доминируют покупатели (тело свечей + объём)',
                 'smc.flowBear': 'Order Flow: доминируют продавцы (тело свечей + объём)',
                 'ai.longtermTitle': 'Долгосрочный прогноз',
+                'trend.up': 'Рост',
+                'trend.down': 'Спад',
+                'trend.flat': 'Боковик',
+                'trend.byChart': 'Тренд по графику',
                 'ai.shorttermTitle': 'Краткосрочный прогноз',
                 'ai.indicatorsTitle': 'Индикаторы',
                 'ai.reasoningTitle': 'Анализ',
@@ -3264,6 +3307,10 @@
                 'smc.flowBull': 'Order Flow: buyers dominate (candle bodies + volume)',
                 'smc.flowBear': 'Order Flow: sellers dominate (candle bodies + volume)',
                 'ai.longtermTitle': 'Long-term forecast',
+                'trend.up': 'Up',
+                'trend.down': 'Down',
+                'trend.flat': 'Sideways',
+                'trend.byChart': 'Chart trend',
                 'ai.shorttermTitle': 'Short-term forecast',
                 'ai.indicatorsTitle': 'Indicators',
                 'ai.reasoningTitle': 'Analysis',

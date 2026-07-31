@@ -2063,10 +2063,11 @@ a.topbar-logo:hover { opacity: 0.9; }
 }
 
 .ai-symbol-bar {
-    padding: 12px 16px;
+    padding: 10px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     border-bottom: 1px solid var(--card-border);
 }
 
@@ -2074,6 +2075,65 @@ a.topbar-logo:hover { opacity: 0.9; }
     font-family: var(--font-mono);
     font-size: 1rem;
     font-weight: 700;
+    flex-shrink: 0;
+}
+
+.ai-trend-pointer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.ai-trend-arrow {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1;
+    width: 1.2em;
+    text-align: center;
+}
+.ai-trend-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    min-width: 0;
+}
+.ai-trend-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+.ai-trend-str {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+.ai-trend-pointer[data-dir="up"] {
+    border-color: rgba(0, 230, 118, 0.45);
+    background: rgba(0, 230, 118, 0.1);
+    box-shadow: 0 0 12px rgba(0, 230, 118, 0.12);
+}
+.ai-trend-pointer[data-dir="up"] .ai-trend-arrow,
+.ai-trend-pointer[data-dir="up"] .ai-trend-label {
+    color: #00E676;
+}
+.ai-trend-pointer[data-dir="down"] {
+    border-color: rgba(255, 51, 102, 0.45);
+    background: rgba(255, 51, 102, 0.1);
+    box-shadow: 0 0 12px rgba(255, 51, 102, 0.12);
+}
+.ai-trend-pointer[data-dir="down"] .ai-trend-arrow,
+.ai-trend-pointer[data-dir="down"] .ai-trend-label {
+    color: #FF3366;
+}
+.ai-trend-pointer[data-dir="sideways"] .ai-trend-arrow,
+.ai-trend-pointer[data-dir="sideways"] .ai-trend-label {
+    color: #FFC107;
 }
 
 .ai-price-display {
@@ -2082,6 +2142,8 @@ a.topbar-logo:hover { opacity: 0.9; }
     background: rgba(255, 255, 255, 0.08);
     padding: 3px 8px;
     border-radius: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .ai-direction {
