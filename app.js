@@ -1596,6 +1596,36 @@
         }
     }
 
+    // tv.js quirk: hide_top_toolbar:false omits the param, and widgetembed then defaults to HIDDEN.
+    // hide_side_toolbar:false works because tv.js sends "0" explicitly for that flag.
+    function forceTvTopToolbarVisible(containerId) {
+        var root = document.getElementById(containerId);
+        if (!root) return;
+        var patch = function () {
+            var iframe = root.querySelector('iframe');
+            if (!iframe || !iframe.src) return false;
+            try {
+                var href = iframe.src;
+                var hashIdx = href.indexOf('#');
+                if (hashIdx < 0) return false;
+                var raw = decodeURIComponent(href.slice(hashIdx + 1));
+                var cfg = JSON.parse(raw);
+                if (String(cfg.hide_top_toolbar) === '0') return true;
+                cfg.hide_top_toolbar = '0';
+                iframe.src = href.slice(0, hashIdx + 1) + encodeURIComponent(JSON.stringify(cfg));
+                return true;
+            } catch (e) {
+                return false;
+            }
+        };
+        if (patch()) return;
+        var n = 0;
+        var timer = setInterval(function () {
+            n++;
+            if (patch() || n > 50) clearInterval(timer);
+        }, 40);
+    }
+
     function createChartWidget(parentEl, tvSymbol, interval, compact) {
         // Stable id for main chart helps TV restore drawings/settings after reload
         var containerId = compact
@@ -1615,7 +1645,7 @@
             style: compact ? '1' : String(currentChartStyle || '1'),
             locale: getTvLocale(),
             container_id: containerId,
-            // Native TradingView chrome (toolbar + drawings) — not a custom clone
+            // Must be patched to "0" after create — see forceTvTopToolbarVisible
             hide_top_toolbar: !!compact,
             hide_side_toolbar: !!compact,
             hide_legend: false,
@@ -1629,13 +1659,7 @@
             hotlist: false,
             calendar: false,
             withdateranges: !compact,
-            enabled_features: compact ? [] : [
-                'header_widget',
-                'header_indicators',
-                'header_fullscreen_button',
-                'study_templates',
-                'side_toolbar_in_fullscreen_mode'
-            ],
+            enabled_features: [],
             disabled_features: compact ? [
                 'header_widget',
                 'left_toolbar',
@@ -1668,7 +1692,10 @@
             }
         });
 
-        if (!compact) activeTvWidget = widget;
+        if (!compact) {
+            activeTvWidget = widget;
+            forceTvTopToolbarVisible(containerId);
+        }
 
         return widget;
     }
