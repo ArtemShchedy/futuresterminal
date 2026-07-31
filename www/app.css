@@ -829,46 +829,52 @@ a.topbar-logo:hover { opacity: 0.9; }
     overflow: hidden;
 }
 
-.oi-pane {
-    display: none;
-    flex: 0 0 168px;
-    min-height: 140px;
-    max-height: 220px;
+/* Indicator panes under chart — TradingView RSI-like style */
+.ind-panes {
+    display: flex;
     flex-direction: column;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
     background: #0B0B0F;
-    position: relative;
     z-index: 2;
 }
-.oi-pane.is-visible {
+.ind-pane {
     display: flex;
+    flex-direction: column;
+    flex: 0 0 148px;
+    min-height: 130px;
+    max-height: 180px;
+    border-top: 1px solid rgba(120, 123, 134, 0.35);
+    position: relative;
+    background: #0B0B0F;
 }
-.oi-pane-header {
+.ind-pane-legend {
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    z-index: 3;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 6px 12px 2px;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    flex-shrink: 0;
-}
-.oi-pane-title {
+    align-items: baseline;
+    gap: 8px;
+    pointer-events: none;
+    font-size: 0.72rem;
     font-weight: 600;
-    color: #c9d2e0;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.85);
 }
-.oi-pane-value {
+.ind-pane-name {
+    color: #d1d4dc;
+}
+.ind-pane-val {
     font-family: var(--font-mono, ui-monospace, monospace);
-    color: #E8EEF7;
+    font-weight: 700;
 }
-.oi-pane-canvas {
+.ind-pane-canvas {
     width: 100%;
-    flex: 1;
-    min-height: 0;
+    height: 100%;
     display: block;
 }
-.chart-main-col.has-oi .chart-viewport {
+.chart-main-col.has-ind-panes .chart-viewport {
     flex: 1 1 auto;
+    min-height: 180px;
 }
 
 .chart-area iframe,
