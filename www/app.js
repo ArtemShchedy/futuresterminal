@@ -471,9 +471,49 @@
         { id: '3', labelKey: 'chart.styleArea', fallback: 'Область' }
     ];
 
-    // Indicators: native TradingView toolbar (full searchable list).
-    // OI stays custom (Binance) — free TV embed has no reliable Open Interest study.
+    // Indicators dialog (TV-style search). Built-ins load via widget studies[];
+    // OI is custom Binance pane (community Pine scripts cannot run in free TV embed).
     var OI_STUDY_ID = 'ft-open-interest';
+    var IND_FAV_STORAGE = 'ft_indicator_favorites';
+    var IND_CATALOG = [
+        { id: OI_STUDY_ID, name: 'Open Interest (Binance)', author: 'FuturesTerminal', cat: 'custom', custom: true },
+        { id: 'RSI@tv-basicstudies', name: 'Relative Strength Index', author: 'TradingView', cat: 'ta' },
+        { id: 'MACD@tv-basicstudies', name: 'MACD', author: 'TradingView', cat: 'ta' },
+        { id: 'Stochastic@tv-basicstudies', name: 'Stochastic', author: 'TradingView', cat: 'ta' },
+        { id: 'StochasticRSI@tv-basicstudies', name: 'Stochastic RSI', author: 'TradingView', cat: 'ta' },
+        { id: 'MASimple@tv-basicstudies', name: 'Moving Average', author: 'TradingView', cat: 'ta' },
+        { id: 'MAExp@tv-basicstudies', name: 'Moving Average Exponential', author: 'TradingView', cat: 'ta' },
+        { id: 'MAWeighted@tv-basicstudies', name: 'Moving Average Weighted', author: 'TradingView', cat: 'ta' },
+        { id: 'BB@tv-basicstudies', name: 'Bollinger Bands', author: 'TradingView', cat: 'ta' },
+        { id: 'VWAP@tv-basicstudies', name: 'VWAP', author: 'TradingView', cat: 'ta' },
+        { id: 'ATR@tv-basicstudies', name: 'Average True Range', author: 'TradingView', cat: 'ta' },
+        { id: 'CCI@tv-basicstudies', name: 'Commodity Channel Index', author: 'TradingView', cat: 'ta' },
+        { id: 'Momentum@tv-basicstudies', name: 'Momentum', author: 'TradingView', cat: 'ta' },
+        { id: 'ROC@tv-basicstudies', name: 'Rate Of Change', author: 'TradingView', cat: 'ta' },
+        { id: 'WilliamsR@tv-basicstudies', name: 'Williams %R', author: 'TradingView', cat: 'ta' },
+        { id: 'OBV@tv-basicstudies', name: 'On Balance Volume', author: 'TradingView', cat: 'ta' },
+        { id: 'Volume@tv-basicstudies', name: 'Volume', author: 'TradingView', cat: 'ta' },
+        { id: 'IchimokuCloud@tv-basicstudies', name: 'Ichimoku Cloud', author: 'TradingView', cat: 'ta' },
+        { id: 'PivotPointsStandard@tv-basicstudies', name: 'Pivot Points Standard', author: 'TradingView', cat: 'ta' },
+        { id: 'AwesomeOscillator@tv-basicstudies', name: 'Awesome Oscillator', author: 'TradingView', cat: 'ta' },
+        { id: 'DMI@tv-basicstudies', name: 'Directional Movement Index', author: 'TradingView', cat: 'ta' },
+        { id: 'ParabolicSAR@tv-basicstudies', name: 'Parabolic SAR', author: 'TradingView', cat: 'ta' },
+        { id: 'KeltnerChannels@tv-basicstudies', name: 'Keltner Channels', author: 'TradingView', cat: 'ta' },
+        { id: 'ChaikinOscillator@tv-basicstudies', name: 'Chaikin Oscillator', author: 'TradingView', cat: 'ta' },
+        { id: 'UltimateOscillator@tv-basicstudies', name: 'Ultimate Oscillator', author: 'TradingView', cat: 'ta' },
+        { id: 'TripleEMA@tv-basicstudies', name: 'Triple EMA', author: 'TradingView', cat: 'ta' },
+        { id: 'HullMA@tv-basicstudies', name: 'Hull Moving Average', author: 'TradingView', cat: 'ta' },
+        { id: 'FisherTransform@tv-basicstudies', name: 'Fisher Transform', author: 'TradingView', cat: 'ta' },
+        { id: 'VortexIndicator@tv-basicstudies', name: 'Vortex Indicator', author: 'TradingView', cat: 'ta' },
+        { id: 'ZigZag@tv-basicstudies', name: 'Zig Zag', author: 'TradingView', cat: 'ta' },
+        { id: 'PriceOsc@tv-basicstudies', name: 'Price Oscillator', author: 'TradingView', cat: 'ta' },
+        { id: 'BullBearPower@tv-basicstudies', name: 'Bull Bear Power', author: 'TradingView', cat: 'ta' },
+        { id: 'Envelopes@tv-basicstudies', name: 'Envelopes', author: 'TradingView', cat: 'ta' },
+        { id: 'DonchianChannels@tv-basicstudies', name: 'Donchian Channels', author: 'TradingView', cat: 'ta' },
+        { id: 'ChopZone@tv-basicstudies', name: 'Chop Zone', author: 'TradingView', cat: 'ta' },
+        { id: 'SessionVolumeProfile@tv-basicstudies', name: 'Session Volume Profile', author: 'TradingView', cat: 'ta' }
+    ];
+    var indDialogState = { open: false, cat: 'favorites', query: '' };
     var oiPaneState = { points: [], candles: [], loading: false, timer: null, lastKey: '' };
     var syncedChartState = {
         priceChart: null,
@@ -616,18 +656,28 @@
         } catch (e) {
             currentChartStudies = [];
         }
-        // Only persist custom OI flag — all other indicators come from native TV UI
         var migrate = {
+            'ft-rsi': 'RSI@tv-basicstudies',
+            'ft-macd': 'MACD@tv-basicstudies',
+            'ft-stoch': 'Stochastic@tv-basicstudies',
             'Open_Interest': OI_STUDY_ID,
             'OpenInterest@tv-basicstudies': OI_STUDY_ID,
             'Open Interest@tv-basicstudies': OI_STUDY_ID
         };
-        var oiOn = currentChartStudies.some(function (id) {
-            var n = migrate[id] || id;
-            return n === OI_STUDY_ID;
+        var allowed = {};
+        for (var a = 0; a < IND_CATALOG.length; a++) allowed[IND_CATALOG[a].id] = true;
+        currentChartStudies = currentChartStudies.map(function (id) {
+            return migrate[id] || id;
+        }).filter(function (id, i, arr) {
+            return allowed[id] && arr.indexOf(id) === i;
         });
-        currentChartStudies = oiOn ? [OI_STUDY_ID] : [];
         saveChartStudies();
+    }
+
+    function getTvStudiesOnly() {
+        return currentChartStudies.filter(function (id) {
+            return id && id !== OI_STUDY_ID && String(id).indexOf('ft-') !== 0;
+        });
     }
 
     function isOiEnabled() {
@@ -636,6 +686,203 @@
 
     function saveChartStudies() {
         try { localStorage.setItem(CHART_STUDIES_STORAGE, JSON.stringify(currentChartStudies)); } catch (e) {}
+    }
+
+    function getIndicatorFavorites() {
+        try {
+            var raw = localStorage.getItem(IND_FAV_STORAGE);
+            var list = raw ? JSON.parse(raw) : null;
+            if (!Array.isArray(list)) {
+                return ['RSI@tv-basicstudies', 'MACD@tv-basicstudies', OI_STUDY_ID];
+            }
+            return list.filter(function (id) { return typeof id === 'string' && id; });
+        } catch (e) {
+            return ['RSI@tv-basicstudies', 'MACD@tv-basicstudies', OI_STUDY_ID];
+        }
+    }
+
+    function saveIndicatorFavorites(list) {
+        try { localStorage.setItem(IND_FAV_STORAGE, JSON.stringify(list)); } catch (e) {}
+    }
+
+    function findIndicatorById(id) {
+        for (var i = 0; i < IND_CATALOG.length; i++) {
+            if (IND_CATALOG[i].id === id) return IND_CATALOG[i];
+        }
+        return null;
+    }
+
+    function getIndicatorsForDialog() {
+        var q = String(indDialogState.query || '').trim().toLowerCase();
+        var favs = getIndicatorFavorites();
+        var list = IND_CATALOG.slice();
+        if (!q) {
+            if (indDialogState.cat === 'favorites') {
+                list = favs.map(findIndicatorById).filter(Boolean);
+            } else if (indDialogState.cat === 'ta') {
+                list = list.filter(function (x) { return x.cat === 'ta'; });
+            } else if (indDialogState.cat === 'custom') {
+                list = list.filter(function (x) { return x.cat === 'custom'; });
+            } else if (indDialogState.cat === 'active') {
+                list = currentChartStudies.map(findIndicatorById).filter(Boolean);
+            }
+        } else {
+            list = list.filter(function (x) {
+                return (x.name + ' ' + x.author + ' ' + x.id).toLowerCase().indexOf(q) !== -1;
+            });
+        }
+        return list;
+    }
+
+    function renderIndicatorsDialog() {
+        var nav = document.getElementById('ind-dialog-nav');
+        var listEl = document.getElementById('ind-dialog-list');
+        if (!nav || !listEl) return;
+
+        var cats = [
+            { group: 'Мои', items: [
+                { id: 'favorites', label: 'Избранное', icon: 'star' },
+                { id: 'active', label: 'На графике', icon: 'list' }
+            ]},
+            { group: 'Встроенные', items: [
+                { id: 'ta', label: 'Теханализ', icon: 'ta' },
+                { id: 'custom', label: 'Open Interest', icon: 'oi' }
+            ]}
+        ];
+        var navHtml = '';
+        for (var g = 0; g < cats.length; g++) {
+            navHtml += '<div class="ind-nav-group"><div class="ind-nav-group-title">' + cats[g].group + '</div>';
+            for (var i = 0; i < cats[g].items.length; i++) {
+                var it = cats[g].items[i];
+                var active = !indDialogState.query && indDialogState.cat === it.id ? ' active' : '';
+                navHtml += '<button type="button" class="ind-nav-item' + active + '" data-ind-cat="' + it.id + '">';
+                if (it.icon === 'star') {
+                    navHtml += '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+                } else {
+                    navHtml += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18V6M9 18v-7M14 18V9M19 18v-4"/></svg>';
+                }
+                navHtml += it.label + '</button>';
+            }
+            navHtml += '</div>';
+        }
+        nav.innerHTML = navHtml;
+
+        var favs = getIndicatorFavorites();
+        var rows = getIndicatorsForDialog();
+        if (!rows.length) {
+            listEl.innerHTML = '<div class="ind-empty">' +
+                (indDialogState.query
+                    ? 'Ничего не найдено'
+                    : (indDialogState.cat === 'favorites'
+                        ? 'Нет избранных. Нажмите ★ у индикатора.'
+                        : 'Список пуст')) +
+                '</div>';
+            return;
+        }
+
+        var html = '';
+        for (var r = 0; r < rows.length; r++) {
+            var ind = rows[r];
+            var on = currentChartStudies.indexOf(ind.id) !== -1;
+            var isFav = favs.indexOf(ind.id) !== -1;
+            html += '<div class="ind-row' + (on ? ' is-on' : '') + '" data-ind-id="' + ind.id.replace(/"/g, '') + '">';
+            html += '<div class="ind-name-cell">';
+            html += '<button type="button" class="ind-star-btn' + (isFav ? ' favorited' : '') + '" data-ind-fav="' + ind.id.replace(/"/g, '') + '" title="Избранное">';
+            html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+            html += '</button>';
+            html += '<span class="ind-name">' + ind.name + '</span></div>';
+            html += '<span class="ind-author">' + ind.author + '</span>';
+            html += '<span class="ind-on">' + (on ? 'Вкл' : '') + '</span>';
+            html += '</div>';
+        }
+        listEl.innerHTML = html;
+    }
+
+    window.openIndicatorsDialog = function () {
+        closeAllFloatingPanels();
+        indDialogState.open = true;
+        indDialogState.query = '';
+        var overlay = document.getElementById('ind-dialog-overlay');
+        var input = document.getElementById('ind-dialog-search');
+        if (overlay) {
+            overlay.classList.add('visible');
+            overlay.setAttribute('aria-hidden', 'false');
+        }
+        renderIndicatorsDialog();
+        if (input) {
+            input.value = '';
+            setTimeout(function () { input.focus(); }, 30);
+        }
+    };
+
+    window.closeIndicatorsDialog = function () {
+        indDialogState.open = false;
+        var overlay = document.getElementById('ind-dialog-overlay');
+        if (overlay) {
+            overlay.classList.remove('visible');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+    };
+
+    function initIndicatorsDialog() {
+        var overlay = document.getElementById('ind-dialog-overlay');
+        var input = document.getElementById('ind-dialog-search');
+        var nav = document.getElementById('ind-dialog-nav');
+        var listEl = document.getElementById('ind-dialog-list');
+        if (!overlay || overlay.dataset.bound === '1') return;
+        overlay.dataset.bound = '1';
+
+        if (input) {
+            input.addEventListener('input', function () {
+                indDialogState.query = input.value || '';
+                renderIndicatorsDialog();
+            });
+            input.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeIndicatorsDialog();
+            });
+        }
+        if (nav) {
+            nav.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-ind-cat]');
+                if (!btn) return;
+                indDialogState.cat = btn.getAttribute('data-ind-cat');
+                indDialogState.query = '';
+                if (input) input.value = '';
+                renderIndicatorsDialog();
+            });
+        }
+        if (listEl) {
+            listEl.addEventListener('click', function (e) {
+                var favBtn = e.target.closest('[data-ind-fav]');
+                if (favBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var fid = favBtn.getAttribute('data-ind-fav');
+                    var favs = getIndicatorFavorites();
+                    var ix = favs.indexOf(fid);
+                    if (ix === -1) favs.push(fid);
+                    else favs.splice(ix, 1);
+                    saveIndicatorFavorites(favs);
+                    renderIndicatorsDialog();
+                    return;
+                }
+                var row = e.target.closest('[data-ind-id]');
+                if (!row) return;
+                toggleChartStudy(row.getAttribute('data-ind-id'));
+            });
+        }
+    }
+
+    function toggleChartStudy(studyId) {
+        if (!studyId) return;
+        var idx = currentChartStudies.indexOf(studyId);
+        if (idx === -1) currentChartStudies.push(studyId);
+        else currentChartStudies.splice(idx, 1);
+        saveChartStudies();
+        renderIndicatorsDialog();
+        updateChartToolbarUI();
+        if (selectedSymbol) loadChart(selectedSymbol);
+        else updateOiPane();
     }
 
     function closeCtbMenus() {
@@ -650,6 +897,7 @@
     function closeAllFloatingPanels() {
         closeCtbMenus();
         if (tfPickerOpen) closeTfPicker();
+        if (indDialogState.open) closeIndicatorsDialog();
         var langWrap = document.getElementById('topbar-lang-wrap');
         if (langWrap) langWrap.classList.remove('dropdown-open');
         if (watchlistVisible) {
@@ -672,6 +920,8 @@
             '.ctb-dd',
             '#tf-picker-dropdown',
             '#tf-picker-btn',
+            '#ctb-ind-btn',
+            '#ind-dialog-overlay',
             '#topbar-lang-wrap',
             '#user-menu-popup',
             '#user-menu-btn',
@@ -767,14 +1017,6 @@
         if (selectedSymbol) loadChart(selectedSymbol);
     };
 
-    window.toggleOpenInterest = function () {
-        var on = !isOiEnabled();
-        currentChartStudies = on ? [OI_STUDY_ID] : [];
-        saveChartStudies();
-        updateChartToolbarUI();
-        if (selectedSymbol) loadChart(selectedSymbol);
-        else updateOiPane();
-    };
 
     function oiPeriodForInterval(iv) {
         var n = String(iv || '15');
@@ -1224,10 +1466,9 @@
         var toolbar = document.getElementById('chart-toolbar');
         if (toolbar) toolbar.classList.toggle('hidden', !!multiTFMode);
 
-        var oiBtn = document.getElementById('ctb-oi-btn');
-        if (oiBtn) {
-            oiBtn.classList.toggle('active', isOiEnabled());
-            oiBtn.setAttribute('aria-pressed', isOiEnabled() ? 'true' : 'false');
+        var indBtn = document.getElementById('ctb-ind-btn');
+        if (indBtn) {
+            indBtn.classList.toggle('active', currentChartStudies.length > 0);
         }
     }
 
@@ -1269,6 +1510,7 @@
             });
         }
         initFloatingPanelDismiss();
+        initIndicatorsDialog();
         renderTfToolbar();
         updateOiPane();
         if (!oiPaneState.timer) {
@@ -1378,42 +1620,31 @@
             style: compact ? '1' : String(currentChartStyle || '1'),
             locale: getTvLocale(),
             container_id: containerId,
-            // Native TV top toolbar = Indicators with full searchable list
-            hide_top_toolbar: !!compact,
+            // Custom toolbar + our Indicators dialog (no empty TV gray header bar)
+            hide_top_toolbar: true,
             hide_side_toolbar: !!compact,
             hide_legend: false,
             enable_publishing: false,
             save_image: !compact,
             allow_symbol_change: false,
-            doNotStoreSettings: false,
+            doNotStoreSettings: true,
             client_id: 'futuresterminal',
-            user_id: getTvStorageUserId(),
+            user_id: getTvStorageUserId() + '-s' + getTvStudiesOnly().join('_').replace(/[^a-zA-Z0-9_@-]/g, '').slice(0, 80),
             details: false,
             hotlist: false,
             calendar: false,
             withdateranges: false,
-            enabled_features: compact ? [] : [
-                'header_indicators',
-                'study_templates'
-            ],
-            disabled_features: compact ? [
+            enabled_features: [],
+            disabled_features: [
                 'header_widget',
-                'timeframes_toolbar',
-                'use_localstorage_for_settings'
-            ] : [
-                // Keep Indicators; hide duplicate chrome we already cover in our toolbar
                 'header_symbol_search',
                 'header_compare',
                 'header_screenshot',
                 'header_fullscreen_button',
-                'header_chart_type',
-                'header_undo_redo',
-                'header_saveload',
-                'header_resolutions',
-                'header_interval_dialog_button',
-                'timeframes_toolbar'
+                'timeframes_toolbar',
+                'use_localstorage_for_settings'
             ],
-            studies: [],
+            studies: compact ? [] : getTvStudiesOnly(),
             show_popup_button: true,
             popup_width: '1000',
             popup_height: '650',

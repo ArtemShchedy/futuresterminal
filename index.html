@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="favicon.svg?v=20260726-ft1">
     <link rel="preconnect" href="https://fapi.binance.com" crossorigin>
     <link rel="preconnect" href="https://s3.tradingview.com" crossorigin>
-    <link rel="stylesheet" href="app.css?v=20260731-tvind1">
+    <link rel="stylesheet" href="app.css?v=20260731-inddlg1">
 </head>
 
 <body class="capacitor-app">
@@ -120,9 +120,9 @@
                     <div class="ctb-menu" id="ctb-style-menu" style="display:none"></div>
                 </div>
                 <span class="ctb-sep"></span>
-                <button type="button" class="ctb-btn ctb-oi-btn" id="ctb-oi-btn" onclick="toggleOpenInterest()" title="Open Interest (Binance)">
-                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 18V6M8 18v-5M12 18V9M16 18v-7M20 18V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    <span>OI</span>
+                <button type="button" class="ctb-btn" id="ctb-ind-btn" onclick="openIndicatorsDialog()" title="Индикаторы">
+                    <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 17l5-5 4 4 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="chart.indicators">Индикаторы</span>
                 </button>
                 <span class="ctb-sep"></span>
                 <div class="tf-toolbar-group">
@@ -342,6 +342,31 @@
     <audio id="snd-down" src="sound/DOWN.mp3" preload="none"></audio>
     <audio id="snd-side" src="sound/SIDE.mp3" preload="none"></audio>
 
+    <!-- INDICATORS DIALOG (TradingView-style search) -->
+    <div class="ind-dialog-overlay" id="ind-dialog-overlay" onclick="if(event.target===this) closeIndicatorsDialog()" aria-hidden="true">
+        <div class="ind-dialog" role="dialog" aria-modal="true" aria-labelledby="ind-dialog-title">
+            <div class="ind-dialog-head">
+                <h3 id="ind-dialog-title">Индикаторы, показатели и стратегии</h3>
+                <button type="button" class="ind-dialog-close" onclick="closeIndicatorsDialog()" aria-label="Закрыть">✕</button>
+            </div>
+            <div class="ind-dialog-search">
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <input type="search" id="ind-dialog-search" placeholder="Поиск" autocomplete="off" />
+            </div>
+            <div class="ind-dialog-body">
+                <aside class="ind-dialog-nav" id="ind-dialog-nav"></aside>
+                <div class="ind-dialog-main">
+                    <div class="ind-dialog-cols">
+                        <span>Название</span>
+                        <span>Автор</span>
+                        <span>На графике</span>
+                    </div>
+                    <div class="ind-dialog-list" id="ind-dialog-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- TRADING HISTORY MODAL -->
     <div class="history-modal-overlay" id="history-modal-overlay"
         onclick="if(event.target===this) toggleHistoryModal()">
@@ -405,12 +430,12 @@
         </div>
     </div>
 
-    <script src="owner-config.js?v=20260731-tvind1"></script>
-    <script src="shield.js?v=20260731-tvind1"></script>
-    <script src="ai-engine.js?v=20260731-tvind1"></script>
+    <script src="owner-config.js?v=20260731-inddlg1"></script>
+    <script src="shield.js?v=20260731-inddlg1"></script>
+    <script src="ai-engine.js?v=20260731-inddlg1"></script>
     <script src="https://s3.tradingview.com/tv.js"></script>
     <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="app.js?v=20260731-tvind1"></script>
+    <script src="app.js?v=20260731-inddlg1"></script>
 </body>
 
 </html>
