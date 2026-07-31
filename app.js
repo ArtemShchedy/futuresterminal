@@ -483,7 +483,16 @@
         { id: 'MASimple@tv-basicstudies', label: 'SMA' },
         { id: 'VWAP@tv-basicstudies', label: 'VWAP' }
     ];
-    var oiPaneState = { points: [], loading: false, timer: null, lastKey: '' };
+    var oiPaneState = { points: [], candles: [], loading: false, timer: null, lastKey: '' };
+    var syncedChartState = {
+        priceChart: null,
+        oiChart: null,
+        candleSeries: null,
+        volumeSeries: null,
+        oiSeries: null,
+        syncingRange: false,
+        ro: null
+    };
 
     var TF_CATALOG = [
         {
@@ -801,8 +810,14 @@
         if (enabled && idx === -1) currentChartStudies.push(studyId);
         if (!enabled && idx !== -1) currentChartStudies.splice(idx, 1);
         saveChartStudies();
+        // OI uses synced dual chart (not TV iframe) — always rebuild chart mode
         if (studyId === OI_STUDY_ID) {
-            updateOiPane();
+            if (selectedSymbol) loadChart(selectedSymbol);
+            else updateOiPane();
+            return;
+        }
+        if (shouldUseSyncedOiChart()) {
+            // Price+OI already synced; TV studies need TV mode (OI off)
             return;
         }
         if (selectedSymbol) loadChart(selectedSymbol);
@@ -820,6 +835,16 @@
         if (n === '720') return '12h';
         if (n === 'D' || n === '1D' || n === '1d' || n === 'W' || n === '1W') return '1d';
         return '15m';
+    }
+
+    function binanceKlineInterval(iv) {
+        var map = {
+            '1': '1m', '3': '3m', '5': '5m', '15': '15m', '30': '30m', '45': '30m',
+            '60': '1h', '120': '2h', '180': '3h', '240': '4h',
+            'D': '1d', '1D': '1d', 'W': '1w', '1W': '1w', 'M': '1M', '1M': '1M',
+            '3M': '1M', '6M': '1M', '12M': '1M'
+        };
+        return map[String(iv || '15')] || '15m';
     }
 
     function formatOiValue(v) {
@@ -844,153 +869,338 @@
             var v = Number(row && (row.sumOpenInterestValue != null ? row.sumOpenInterestValue : row.sumOpenInterest));
             if (!isFinite(v) || v <= 0) v = Number(row && row.openInterest);
             return { t: Number(row && row.timestamp) || Number(row && row.time) || 0, v: isFinite(v) ? v : 0 };
-        }).filter(function (p) { return p.v > 0; });
+        }).filter(function (p) { return p.v > 0 && p.t > 0; });
     }
 
-    function setOiPaneVisible(on) {
-        var pane = document.getElementById('oi-pane');
-        var col = document.querySelector('.chart-main-col');
-        if (!pane) return;
-        pane.classList.toggle('is-visible', !!on);
-        pane.setAttribute('aria-hidden', on ? 'false' : 'true');
-        if (col) col.classList.toggle('has-oi', !!on);
+    function hasLightweightCharts() {
+        return !!(window.LightweightCharts && typeof window.LightweightCharts.createChart === 'function');
     }
 
-    function drawOiPane() {
-        var canvas = document.getElementById('oi-pane-canvas');
-        var valueEl = document.getElementById('oi-pane-value');
-        if (!canvas) return;
+    function setSyncedChartMode(on) {
+        var wrap = document.getElementById('synced-chart');
+        var viewport = document.getElementById('chart-viewport');
+        if (wrap) {
+            wrap.classList.toggle('is-active', !!on);
+            wrap.setAttribute('aria-hidden', on ? 'false' : 'true');
+        }
+        if (viewport) viewport.classList.toggle('is-synced-mode', !!on);
+    }
+
+    function destroySyncedCharts() {
+        if (syncedChartState.ro) {
+            try { syncedChartState.ro.disconnect(); } catch (e) {}
+            syncedChartState.ro = null;
+        }
+        if (syncedChartState.priceChart) {
+            try { syncedChartState.priceChart.remove(); } catch (e2) {}
+        }
+        if (syncedChartState.oiChart) {
+            try { syncedChartState.oiChart.remove(); } catch (e3) {}
+        }
+        syncedChartState.priceChart = null;
+        syncedChartState.oiChart = null;
+        syncedChartState.candleSeries = null;
+        syncedChartState.volumeSeries = null;
+        syncedChartState.oiSeries = null;
+        syncedChartState.syncingRange = false;
+        var priceEl = document.getElementById('synced-price');
+        var oiEl = document.getElementById('synced-oi');
+        if (priceEl) priceEl.innerHTML = '';
+        if (oiEl) oiEl.innerHTML = '';
+        setSyncedChartMode(false);
+    }
+
+    function lwcCommonOptions(showTime) {
+        var L = window.LightweightCharts;
+        return {
+            layout: {
+                background: { color: '#0B0B0F' },
+                textColor: '#8E9BAE',
+                fontSize: 11
+            },
+            grid: {
+                vertLines: { color: 'rgba(255,255,255,0.04)' },
+                horzLines: { color: 'rgba(255,255,255,0.04)' }
+            },
+            crosshair: {
+                mode: L.CrosshairMode ? L.CrosshairMode.Normal : 1,
+                vertLine: { color: 'rgba(255,255,255,0.45)', width: 1, style: 3, labelBackgroundColor: '#2a2e39' },
+                horzLine: { color: 'rgba(255,255,255,0.25)', width: 1, style: 3, labelBackgroundColor: '#2a2e39' }
+            },
+            rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.12 } },
+            timeScale: {
+                borderVisible: false,
+                timeVisible: !!showTime,
+                secondsVisible: false,
+                visible: !!showTime,
+                rightOffset: 4
+            },
+            handleScroll: true,
+            handleScale: true
+        };
+    }
+
+    function wireSyncedChartRangeAndCrosshair() {
+        var price = syncedChartState.priceChart;
+        var oi = syncedChartState.oiChart;
+        if (!price || !oi) return;
+
+        function mirrorRange(source, target) {
+            source.timeScale().subscribeVisibleLogicalRangeChange(function (range) {
+                if (!range || syncedChartState.syncingRange) return;
+                syncedChartState.syncingRange = true;
+                try { target.timeScale().setVisibleLogicalRange(range); } catch (e) {}
+                syncedChartState.syncingRange = false;
+            });
+        }
+        mirrorRange(price, oi);
+        mirrorRange(oi, price);
+
+        function timeToSec(t) {
+            if (t == null) return null;
+            if (typeof t === 'object') {
+                return Math.floor(Date.UTC(t.year, t.month - 1, t.day) / 1000);
+            }
+            return Number(t);
+        }
+
+        price.subscribeCrosshairMove(function (param) {
+            if (!param || param.time === undefined || !syncedChartState.oiSeries) {
+                try { oi.clearCrosshairPosition(); } catch (e) {}
+                return;
+            }
+            try {
+                var tSec = timeToSec(param.time);
+                var pts = oiPaneState.points || [];
+                var best = null;
+                for (var i = 0; i < pts.length; i++) {
+                    var ts = Math.floor(pts[i].t / 1000);
+                    if (best == null || Math.abs(ts - tSec) < Math.abs(best.ts - tSec)) {
+                        best = { ts: ts, v: pts[i].v };
+                    }
+                }
+                if (best) oi.setCrosshairPosition(best.v, param.time, syncedChartState.oiSeries);
+            } catch (e2) {}
+        });
+
+        oi.subscribeCrosshairMove(function (param) {
+            if (!param || param.time === undefined || !syncedChartState.candleSeries) {
+                try { price.clearCrosshairPosition(); } catch (e) {}
+                return;
+            }
+            try {
+                var tSec2 = timeToSec(param.time);
+                var bars = oiPaneState.candles || [];
+                var bar = null;
+                for (var j = 0; j < bars.length; j++) {
+                    if (bars[j].time === tSec2) { bar = bars[j]; break; }
+                    if (!bar || Math.abs(bars[j].time - tSec2) < Math.abs(bar.time - tSec2)) bar = bars[j];
+                }
+                if (bar) price.setCrosshairPosition(bar.close, param.time, syncedChartState.candleSeries);
+            } catch (e3) {}
+        });
+    }
+
+    function ensureSyncedCharts() {
+        if (!hasLightweightCharts()) return false;
+        var priceEl = document.getElementById('synced-price');
+        var oiEl = document.getElementById('synced-oi');
+        if (!priceEl || !oiEl) return false;
+
+        if (syncedChartState.priceChart && syncedChartState.oiChart) {
+            setSyncedChartMode(true);
+            resizeSyncedCharts();
+            return true;
+        }
+
+        destroySyncedCharts();
+        setSyncedChartMode(true);
+
+        var L = window.LightweightCharts;
+        var priceOpts = lwcCommonOptions(false);
+        priceOpts.rightPriceScale.scaleMargins = { top: 0.06, bottom: 0.18 };
+        syncedChartState.priceChart = L.createChart(priceEl, priceOpts);
+        syncedChartState.candleSeries = syncedChartState.priceChart.addCandlestickSeries({
+            upColor: '#00E676',
+            downColor: '#FF3366',
+            borderUpColor: '#00E676',
+            borderDownColor: '#FF3366',
+            wickUpColor: '#00E676',
+            wickDownColor: '#FF3366'
+        });
+        syncedChartState.volumeSeries = syncedChartState.priceChart.addHistogramSeries({
+            priceFormat: { type: 'volume' },
+            priceScaleId: '',
+            scaleMargins: { top: 0.82, bottom: 0 }
+        });
+        syncedChartState.priceChart.priceScale('').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+
+        var oiOpts = lwcCommonOptions(true);
+        oiOpts.rightPriceScale.scaleMargins = { top: 0.12, bottom: 0.08 };
+        syncedChartState.oiChart = L.createChart(oiEl, oiOpts);
+        syncedChartState.oiSeries = syncedChartState.oiChart.addAreaSeries({
+            lineColor: '#AB47BC',
+            topColor: 'rgba(171, 71, 188, 0.35)',
+            bottomColor: 'rgba(171, 71, 188, 0.02)',
+            lineWidth: 2,
+            priceLineVisible: true,
+            lastValueVisible: true
+        });
+
+        wireSyncedChartRangeAndCrosshair();
+
+        if (typeof ResizeObserver !== 'undefined') {
+            syncedChartState.ro = new ResizeObserver(function () { resizeSyncedCharts(); });
+            syncedChartState.ro.observe(priceEl);
+            syncedChartState.ro.observe(oiEl);
+        }
+        resizeSyncedCharts();
+        return true;
+    }
+
+    function resizeSyncedCharts() {
+        var priceEl = document.getElementById('synced-price');
+        var oiEl = document.getElementById('synced-oi');
+        if (syncedChartState.priceChart && priceEl) {
+            syncedChartState.priceChart.applyOptions({
+                width: priceEl.clientWidth,
+                height: priceEl.clientHeight
+            });
+        }
+        if (syncedChartState.oiChart && oiEl) {
+            syncedChartState.oiChart.applyOptions({
+                width: oiEl.clientWidth,
+                height: oiEl.clientHeight
+            });
+        }
+    }
+
+    function applySyncedChartData() {
+        if (!syncedChartState.candleSeries || !syncedChartState.oiSeries) return;
+        var candles = oiPaneState.candles || [];
         var pts = oiPaneState.points || [];
-        var dpr = window.devicePixelRatio || 1;
-        var w = canvas.clientWidth || 0;
-        var h = canvas.clientHeight || 0;
-        if (w < 2 || h < 2) return;
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        var ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#0B0B0F';
-        ctx.fillRect(0, 0, w, h);
+        syncedChartState.candleSeries.setData(candles);
+        if (syncedChartState.volumeSeries) {
+            syncedChartState.volumeSeries.setData(candles.map(function (c) {
+                return {
+                    time: c.time,
+                    value: c.volume,
+                    color: c.close >= c.open ? 'rgba(0,230,118,0.45)' : 'rgba(255,51,102,0.45)'
+                };
+            }));
+        }
+        var oiData = pts.map(function (p) {
+            return { time: Math.floor(p.t / 1000), value: p.v };
+        }).filter(function (p, i, arr) {
+            return i === 0 || p.time > arr[i - 1].time;
+        });
+        syncedChartState.oiSeries.setData(oiData);
 
-        if (!pts.length) {
-            ctx.fillStyle = '#8E9BAE';
-            ctx.font = '12px sans-serif';
-            ctx.fillText(oiPaneState.loading ? 'Загрузка Open Interest…' : 'Нет данных Open Interest', 10, 28);
-            if (valueEl) valueEl.textContent = '—';
-            return;
+        var valueEl = document.getElementById('oi-pane-value');
+        if (valueEl) {
+            valueEl.textContent = oiData.length ? formatOiValue(oiData[oiData.length - 1].value) : '—';
         }
 
-        var min = pts[0].v, max = pts[0].v;
-        for (var i = 1; i < pts.length; i++) {
-            if (pts[i].v < min) min = pts[i].v;
-            if (pts[i].v > max) max = pts[i].v;
-        }
-        var padAmt = (max - min) * 0.08 || 1;
-        min -= padAmt; max += padAmt;
-        if (max <= min) max = min + 1;
-        var padX = 4, padY = 8, rightPad = 54;
-        var plotW = Math.max(1, w - padX - rightPad);
-        var plotH = Math.max(1, h - padY * 2);
-        function yOf(v) { return padY + plotH - ((v - min) / (max - min)) * plotH; }
-
-        // RSI-like band fill under the line
-        ctx.beginPath();
-        for (var j = 0; j < pts.length; j++) {
-            var x = padX + (plotW * j) / Math.max(1, pts.length - 1);
-            var y = yOf(pts[j].v);
-            if (j === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.lineTo(padX + plotW, padY + plotH);
-        ctx.lineTo(padX, padY + plotH);
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(171, 71, 188, 0.16)';
-        ctx.fill();
-
-        ctx.beginPath();
-        for (var k = 0; k < pts.length; k++) {
-            var x2 = padX + (plotW * k) / Math.max(1, pts.length - 1);
-            var y2 = yOf(pts[k].v);
-            if (k === 0) ctx.moveTo(x2, y2); else ctx.lineTo(x2, y2);
-        }
-        ctx.strokeStyle = '#AB47BC';
-        ctx.lineWidth = 1.7;
-        ctx.lineJoin = 'round';
-        ctx.stroke();
-
-        var last = pts[pts.length - 1].v;
-        if (valueEl) valueEl.textContent = formatOiValue(last);
-        var label = formatOiValue(last);
-        ctx.font = '11px sans-serif';
-        var tw = ctx.measureText(label).width + 10;
-        var ly = yOf(last);
-        var bx = w - tw - 4;
-        var by = Math.max(2, Math.min(h - 18, ly - 8));
-        ctx.fillStyle = '#AB47BC';
-        ctx.fillRect(bx, by, tw, 16);
-        ctx.fillStyle = '#0B0B0F';
-        ctx.fillText(label, bx + 5, by + 12);
+        try {
+            syncedChartState.priceChart.timeScale().fitContent();
+            var range = syncedChartState.priceChart.timeScale().getVisibleLogicalRange();
+            if (range) syncedChartState.oiChart.timeScale().setVisibleLogicalRange(range);
+        } catch (e) {}
     }
 
     function updateOiPane() {
         var enabled = isOiEnabled() && !multiTFMode;
-        setOiPaneVisible(enabled);
         if (!enabled) {
+            destroySyncedCharts();
             oiPaneState.points = [];
+            oiPaneState.candles = [];
             oiPaneState.lastKey = '';
             return;
         }
         if (!selectedSymbol) {
+            ensureSyncedCharts();
             oiPaneState.points = [];
-            drawOiPane();
+            oiPaneState.candles = [];
+            applySyncedChartData();
             return;
         }
+        if (!hasLightweightCharts()) {
+            setSyncedChartMode(false);
+            return;
+        }
+
         var market = oiMarketSymbol(selectedSymbol);
         var period = oiPeriodForInterval(currentChartInterval);
-        var key = market + '|' + period;
-        if (!market) { oiPaneState.points = []; drawOiPane(); return; }
-        if (oiPaneState.loading && oiPaneState.lastKey === key) return;
+        var kIv = binanceKlineInterval(currentChartInterval);
+        var key = market + '|' + period + '|' + kIv;
+        if (!market) return;
+        if (oiPaneState.loading && oiPaneState.lastKey === key) {
+            ensureSyncedCharts();
+            return;
+        }
+
         oiPaneState.loading = true;
         oiPaneState.lastKey = key;
-        drawOiPane();
+        ensureSyncedCharts();
 
+        var klinesUrl = 'https://fapi.binance.com/fapi/v1/klines?symbol=' +
+            encodeURIComponent(market) + '&interval=' + encodeURIComponent(kIv) + '&limit=300';
         var histUrl = 'https://fapi.binance.com/futures/data/openInterestHist?symbol=' +
-            encodeURIComponent(market) + '&period=' + encodeURIComponent(period) + '&limit=150';
-        fetch(histUrl)
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (!isOiEnabled() || oiPaneState.lastKey !== key) return null;
-                var pts = parseOiHistRows(data);
-                if (pts.length) {
-                    oiPaneState.loading = false;
-                    oiPaneState.points = pts;
-                    drawOiPane();
-                    return null;
+            encodeURIComponent(market) + '&period=' + encodeURIComponent(period) + '&limit=300';
+
+        Promise.all([
+            fetch(klinesUrl).then(function (r) { return r.json(); }),
+            fetch(histUrl).then(function (r) { return r.json(); })
+        ]).then(function (pair) {
+            if (!isOiEnabled() || oiPaneState.lastKey !== key) return;
+            var kraw = pair[0];
+            var oraw = pair[1];
+            var candles = [];
+            if (Array.isArray(kraw)) {
+                for (var i = 0; i < kraw.length; i++) {
+                    var k = kraw[i];
+                    candles.push({
+                        time: Math.floor(Number(k[0]) / 1000),
+                        open: Number(k[1]),
+                        high: Number(k[2]),
+                        low: Number(k[3]),
+                        close: Number(k[4]),
+                        volume: Number(k[5])
+                    });
                 }
+            }
+            var pts = parseOiHistRows(oraw);
+            oiPaneState.loading = false;
+            oiPaneState.candles = candles;
+            oiPaneState.points = pts;
+            if (!pts.length) {
                 return fetch('https://fapi.binance.com/fapi/v1/openInterest?symbol=' + encodeURIComponent(market))
-                    .then(function (r2) { return r2.json(); });
-            })
-            .then(function (now) {
-                if (now == null) return;
-                oiPaneState.loading = false;
-                if (!isOiEnabled() || oiPaneState.lastKey !== key) return;
-                var v = Number(now.openInterest);
-                var t = Number(now.time) || Date.now();
-                oiPaneState.points = (isFinite(v) && v > 0)
-                    ? [{ t: t - 180000, v: v }, { t: t - 90000, v: v }, { t: t, v: v }]
-                    : [];
-                drawOiPane();
-            })
-            .catch(function () {
-                oiPaneState.loading = false;
-                if (oiPaneState.lastKey !== key) return;
-                oiPaneState.points = [];
-                drawOiPane();
-            });
+                    .then(function (r2) { return r2.json(); })
+                    .then(function (now) {
+                        if (!isOiEnabled() || oiPaneState.lastKey !== key) return;
+                        var v = Number(now.openInterest);
+                        var t = Number(now.time) || Date.now();
+                        oiPaneState.points = (isFinite(v) && v > 0)
+                            ? [{ t: t - 180000, v: v }, { t: t - 90000, v: v }, { t: t, v: v }]
+                            : [];
+                        applySyncedChartData();
+                    });
+            }
+            applySyncedChartData();
+        }).catch(function () {
+            oiPaneState.loading = false;
+            if (oiPaneState.lastKey !== key) return;
+            oiPaneState.points = [];
+            oiPaneState.candles = [];
+            applySyncedChartData();
+        });
     }
 
     function updateIndicatorPanes() { updateOiPane(); }
+
+    function shouldUseSyncedOiChart() {
+        return isOiEnabled() && !multiTFMode && !!selectedSymbol && hasLightweightCharts();
+    }
 
     function getTvChartApi() {
         if (!activeTvWidget) return null;
@@ -1119,6 +1329,13 @@
 
         var coin = coins.find(function (c) { return c.symbol === selectedSymbol; });
         if (!coin) return;
+
+        if (shouldUseSyncedOiChart()) {
+            renderTfToolbar();
+            updateOiPane();
+            try { runAIAnalysis(selectedSymbol, false); } catch (eOiTf) {}
+            return;
+        }
 
         if (activeTvWidget) {
             var applied = false;
@@ -1277,6 +1494,27 @@
         if (btn) btn.classList.toggle('active', multiTFMode);
         renderTfToolbar();
 
+        // Open Interest: synced price+OI charts (shared pan/zoom/crosshair)
+        if (isOiEnabled() && !multiTFMode && hasLightweightCharts()) {
+            if (!multiTFMode) activeTvWidget = null;
+            container.innerHTML = '';
+            container.className = '';
+            try {
+                updateOiPane();
+                setTimeout(function () {
+                    if (currentLoadId === thisLoadId) {
+                        document.getElementById('chart-loading').classList.add('hidden');
+                        resizeSyncedCharts();
+                    }
+                }, 400);
+            } catch (eOi) {
+                destroySyncedCharts();
+                container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#555">Ошибка загрузки графика</div>';
+            }
+            return;
+        }
+
+        destroySyncedCharts();
         if (!multiTFMode) activeTvWidget = null;
 
         // Reset and rebuild DOM for new symbol or mode
@@ -2747,7 +2985,7 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
-                try { drawOiPane(); } catch (e2) {}
+                try { resizeSyncedCharts(); } catch (e2) {}
             }, 180);
         });
         window.addEventListener('orientationchange', function () {
@@ -2756,7 +2994,7 @@
                 try {
                     if (tvWidget && typeof tvWidget.resize === 'function') tvWidget.resize();
                 } catch (e) {}
-                try { drawOiPane(); } catch (e2) {}
+                try { resizeSyncedCharts(); } catch (e2) {}
             }, 280);
         });
 
