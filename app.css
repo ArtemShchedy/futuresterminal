@@ -680,12 +680,95 @@ a.topbar-logo:hover { opacity: 0.9; }
 }
 
 #sort-trades {
-    flex: 1.45;
+    flex: 1;
 }
 
-#sort-name {
-    flex: 1.2;
+.sidebar-hot-panel {
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid var(--card-border);
+    background: rgba(255, 80, 60, 0.04);
 }
+
+.sidebar-hot-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #ffb74d;
+    margin-bottom: 6px;
+}
+
+.sidebar-hot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 168px;
+    overflow-y: auto;
+}
+
+.sidebar-hot-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.sidebar-hot-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+.sidebar-hot-empty {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    padding: 6px 2px;
+}
+
+.sidebar-hot-item {
+    display: grid;
+    grid-template-columns: 18px 1fr auto;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.sidebar-hot-item:hover {
+    background: rgba(255, 183, 77, 0.08);
+    border-color: rgba(255, 183, 77, 0.25);
+}
+
+.sidebar-hot-item.active {
+    background: rgba(0, 230, 118, 0.1);
+    border-color: rgba(0, 230, 118, 0.35);
+}
+
+.sidebar-hot-rank {
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+.sidebar-hot-symbol {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-hot-change {
+    font-weight: 700;
+    font-size: 0.68rem;
+}
+
+.sidebar-hot-change.up { color: var(--primary); }
+.sidebar-hot-change.down { color: var(--accent); }
 
 .sort-btn.active {
     background: rgba(0, 230, 118, 0.1);

@@ -362,6 +362,56 @@
             });
     }
 
+    var HOT_COINS_LIMIT = 10;
+    var HOT_MIN_VOLUME = 5000000;
+    var HOT_MIN_TRADES = 3000;
+
+    function computeHotScore(c) {
+        var changeAbs = Math.abs(c.change || 0);
+        var vol = c.volume || 0;
+        var trades = c.trades || 0;
+        if (vol < HOT_MIN_VOLUME || trades < HOT_MIN_TRADES || changeAbs < 0.5) return 0;
+        var changeScore = Math.min(changeAbs / 25, 1);
+        var volumeScore = Math.min(Math.log10(vol) / 10, 1);
+        var tradesScore = Math.min(Math.log10(trades) / 5.5, 1);
+        return changeScore * 0.5 + volumeScore * 0.3 + tradesScore * 0.2;
+    }
+
+    function getHotCoins(limit) {
+        var ranked = coins
+            .map(function (c) {
+                return { coin: c, score: computeHotScore(c) };
+            })
+            .filter(function (x) { return x.score > 0; })
+            .sort(function (a, b) { return b.score - a.score; });
+        return ranked.slice(0, limit || HOT_COINS_LIMIT).map(function (x) { return x.coin; });
+    }
+
+    function renderHotCoinsList() {
+        var listEl = document.getElementById('sidebar-hot-list');
+        if (!listEl) return;
+        var hot = getHotCoins(HOT_COINS_LIMIT);
+        if (!hot.length) {
+            listEl.innerHTML = '<div class="sidebar-hot-empty">' +
+                ((window.__i18nMap && window.__i18nMap['sidebar.hotEmpty']) || 'Загрузка активных монет…') +
+                '</div>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < hot.length; i++) {
+            var c = hot[i];
+            var active = c.symbol === selectedSymbol ? ' active' : '';
+            var changeClass = c.change >= 0 ? 'up' : 'down';
+            var changeStr = (c.change >= 0 ? '+' : '') + c.change.toFixed(2) + '%';
+            html += '<button type="button" class="sidebar-hot-item' + active + '" onclick="selectCoin(\'' + c.symbol + '\')">';
+            html += '<span class="sidebar-hot-rank">' + (i + 1) + '</span>';
+            html += '<span class="sidebar-hot-symbol">' + c.symbol + '</span>';
+            html += '<span class="sidebar-hot-change ' + changeClass + '">' + changeStr + '</span>';
+            html += '</button>';
+        }
+        listEl.innerHTML = html;
+    }
+
     // === SORT & FILTER ===
     function applySortAndRender() {
         var query = (document.getElementById('search-input').value || '').toUpperCase();
@@ -371,21 +421,18 @@
         if (currentSort === 'volume') filteredCoins.sort(function (a, b) { return b.volume - a.volume; });
         else if (currentSort === 'trades') filteredCoins.sort(function (a, b) { return (b.trades || 0) - (a.trades || 0); });
         else if (currentSort === 'change') filteredCoins.sort(function (a, b) { return Math.abs(b.change) - Math.abs(a.change); });
-        else if (currentSort === 'name') {
-            filteredCoins.sort(function (a, b) {
-                var an = (a.display || a.symbol || '').toUpperCase();
-                var bn = (b.display || b.symbol || '').toUpperCase();
-                return an.localeCompare(bn, 'en', { sensitivity: 'base', numeric: true });
-            });
+        else if (currentSort === 'hot') {
+            filteredCoins.sort(function (a, b) { return computeHotScore(b) - computeHotScore(a); });
         }
         renderCoinList();
+        renderHotCoinsList();
     }
 
     window.filterCoins = function () { applySortAndRender(); };
     window.sortCoins = function (type) {
         currentSort = type;
         document.querySelectorAll('.sort-btn').forEach(function (b) { b.classList.remove('active'); });
-        var btnId = 'sort-' + (type === 'volume' ? 'vol' : type);
+        var btnId = type === 'volume' ? 'sort-vol' : ('sort-' + type);
         var btn = document.getElementById(btnId);
         if (btn) btn.classList.add('active');
         applySortAndRender();
@@ -3440,7 +3487,8 @@
                 'sidebar.volume': 'Объём за 24 часа',
                 'sidebar.24h': '24h%',
                 'sidebar.trades': 'Количество сделок',
-                'sidebar.name': 'По алфавиту',
+                'sidebar.hotTitle': '🔥 Волатильные сейчас',
+                'sidebar.hotEmpty': 'Загрузка активных монет…',
                 'sidebar.loading': 'Загрузка...',
                 'sidebar.error': 'Ошибка загрузки',
                 'sidebar.instruments': 'инструментов',
@@ -3685,7 +3733,8 @@
                 'sidebar.volume': 'Volume for 24 hours',
                 'sidebar.24h': '24h%',
                 'sidebar.trades': 'Number of trades',
-                'sidebar.name': 'Alphabetically',
+                'sidebar.hotTitle': '🔥 Hot & volatile now',
+                'sidebar.hotEmpty': 'Loading active coins…',
                 'sidebar.loading': 'Loading...',
                 'sidebar.error': 'Load error',
                 'sidebar.instruments': 'instruments',
